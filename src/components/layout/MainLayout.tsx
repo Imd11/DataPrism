@@ -54,7 +54,7 @@ export const MainLayout = ({ tableWorkspace, resultsPanel, canvas }: MainLayoutP
               {/* Vertical Resize Handle */}
               <ResizableHandle 
                 withHandle 
-                className="bg-border hover:bg-primary/20 transition-colors data-[resize-handle-active]:bg-primary/30"
+                className="bg-border hover:bg-foreground/10 transition-colors data-[resize-handle-active]:bg-foreground/15"
               />
               
               {/* Results Panel */}
@@ -72,7 +72,7 @@ export const MainLayout = ({ tableWorkspace, resultsPanel, canvas }: MainLayoutP
           {/* Horizontal Resize Handle */}
           <ResizableHandle 
             withHandle 
-            className="bg-border hover:bg-primary/20 transition-colors data-[resize-handle-active]:bg-primary/30"
+            className="bg-border hover:bg-foreground/10 transition-colors data-[resize-handle-active]:bg-foreground/15"
           />
           
           {/* Canvas - Right Panel */}

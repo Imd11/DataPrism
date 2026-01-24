@@ -33,10 +33,10 @@ const FieldIcon = ({ field }: { field: Field }) => {
     return <Hash className="w-3 h-3 text-emerald-500 flex-shrink-0" />;
   }
   if (field.isUnique) {
-    return <Fingerprint className="w-3 h-3 text-blue-500 flex-shrink-0" />;
+    return <Fingerprint className="w-3 h-3 text-cyan-600 flex-shrink-0" />;
   }
   if (field.isForeignKey) {
-    return <Link2 className="w-3 h-3 text-purple-500 flex-shrink-0" />;
+    return <Link2 className="w-3 h-3 text-rose-500 flex-shrink-0" />;
   }
   return null;
 };
@@ -81,7 +81,7 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
   return (
     <div className={cn(
       "min-w-[240px] max-w-[280px] rounded-md border bg-canvas-node overflow-hidden transition-all",
-      selected ? "border-primary ring-2 ring-primary/20" : "border-canvas-node-border",
+      selected ? "border-foreground/50 ring-2 ring-foreground/10" : "border-canvas-node-border",
       data.isDerived && "border-dashed border-warning/50"
     )}>
       {/* Header */}
@@ -179,11 +179,11 @@ const CanvasLegend = () => {
         <span className="text-muted-foreground">Identity</span>
       </div>
       <div className="flex items-center gap-1.5 text-xs">
-        <Fingerprint className="w-3.5 h-3.5 text-blue-500" />
+        <Fingerprint className="w-3.5 h-3.5 text-cyan-600" />
         <span className="text-muted-foreground">Unique</span>
       </div>
       <div className="flex items-center gap-1.5 text-xs">
-        <Link2 className="w-3.5 h-3.5 text-purple-500" />
+        <Link2 className="w-3.5 h-3.5 text-rose-500" />
         <span className="text-muted-foreground">Foreign key</span>
       </div>
       <div className="flex items-center gap-1.5 text-xs">
@@ -302,13 +302,13 @@ export const RelationCanvas = () => {
       type: 'smoothstep',
       animated: true,
       style: { 
-        stroke: 'hsl(var(--primary))', 
+        stroke: 'hsl(var(--foreground) / 0.4)', 
         strokeWidth: 1.5,
         opacity: 0.7,
       },
       labelStyle: { 
         fontSize: 11, 
-        fill: 'hsl(var(--primary))', 
+        fill: 'hsl(var(--foreground))', 
         fontWeight: 600,
         letterSpacing: '0.5px',
       },
