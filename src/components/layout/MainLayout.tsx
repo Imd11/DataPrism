@@ -1,4 +1,9 @@
 import { ReactNode } from 'react';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
 import { AppSidebar } from './AppSidebar';
 import { TopToolbar } from './TopToolbar';
 import { useAppStore } from '@/stores/appStore';
@@ -23,29 +28,63 @@ export const MainLayout = ({ tableWorkspace, resultsPanel, canvas }: MainLayoutP
         {/* Sidebar */}
         <AppSidebar />
         
-        {/* Left Panel (Table + Results) */}
-        <div className={cn(
-          "flex flex-col transition-all duration-200",
-          sidebarCollapsed ? "w-[calc(60%-24px)]" : "w-[calc(60%-130px)]"
-        )}>
-          {/* Table Workspace - Takes ~60% of left panel */}
-          <div className="flex-[6] min-h-0 border-b border-border overflow-hidden">
-            {tableWorkspace}
-          </div>
+        {/* Resizable Main Area */}
+        <ResizablePanelGroup 
+          direction="horizontal" 
+          className="flex-1"
+        >
+          {/* Left Panel (Table + Results) */}
+          <ResizablePanel 
+            defaultSize={55} 
+            minSize={30} 
+            maxSize={80}
+            className="flex flex-col"
+          >
+            <ResizablePanelGroup direction="vertical">
+              {/* Table Workspace */}
+              <ResizablePanel 
+                defaultSize={60} 
+                minSize={20} 
+                maxSize={85}
+                className="overflow-hidden"
+              >
+                {tableWorkspace}
+              </ResizablePanel>
+              
+              {/* Vertical Resize Handle */}
+              <ResizableHandle 
+                withHandle 
+                className="bg-border hover:bg-primary/20 transition-colors data-[resize-handle-active]:bg-primary/30"
+              />
+              
+              {/* Results Panel */}
+              <ResizablePanel 
+                defaultSize={40} 
+                minSize={15} 
+                maxSize={80}
+                className="overflow-hidden"
+              >
+                {resultsPanel}
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ResizablePanel>
           
-          {/* Results Panel - Takes ~40% of left panel */}
-          <div className="flex-[4] min-h-0 overflow-hidden">
-            {resultsPanel}
-          </div>
-        </div>
-        
-        {/* Canvas - Right Panel */}
-        <div className={cn(
-          "flex-1 min-w-[400px] border-l border-border overflow-hidden",
-          sidebarCollapsed ? "w-[40%]" : "w-[40%]"
-        )}>
-          {canvas}
-        </div>
+          {/* Horizontal Resize Handle */}
+          <ResizableHandle 
+            withHandle 
+            className="bg-border hover:bg-primary/20 transition-colors data-[resize-handle-active]:bg-primary/30"
+          />
+          
+          {/* Canvas - Right Panel */}
+          <ResizablePanel 
+            defaultSize={45} 
+            minSize={25} 
+            maxSize={70}
+            className="overflow-hidden"
+          >
+            {canvas}
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );
