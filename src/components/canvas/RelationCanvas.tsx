@@ -84,12 +84,6 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
       selected ? "border-primary ring-2 ring-primary/20" : "border-canvas-node-border",
       data.isDerived && "border-dashed border-warning/50"
     )}>
-      <Handle 
-        type="target" 
-        position={Position.Left} 
-        className="!w-3 !h-3 !bg-canvas-node !border-2 !border-primary !-left-1.5" 
-      />
-      
       {/* Header */}
       <div className="px-3 py-2 border-b border-canvas-node-border bg-muted/30 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -106,16 +100,25 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
         </div>
       </div>
       
-      {/* Fields */}
+      {/* Fields with individual handles */}
       <div className="divide-y divide-canvas-node-border/50">
         {data.fields.map((field, idx) => (
           <div 
             key={`${field.name}-${idx}`}
             className={cn(
-              "px-3 py-1.5 flex items-center gap-2 text-xs hover:bg-muted/20 transition-colors",
+              "px-3 py-1.5 flex items-center gap-2 text-xs hover:bg-muted/20 transition-colors relative",
               field.isPrimaryKey && "bg-amber-500/5"
             )}
           >
+            {/* Left handle for this field */}
+            <Handle 
+              type="target" 
+              position={Position.Left}
+              id={`${field.name}-left`}
+              className="!w-2 !h-2 !bg-primary/60 !border-0 !-left-1"
+              style={{ top: '50%' }}
+            />
+            
             {/* Icons */}
             <div className="flex items-center gap-1 w-8 justify-start">
               <FieldIcon field={field} />
@@ -134,6 +137,15 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
             <span className="text-muted-foreground text-[11px] font-mono">
               {getTypeLabel(field.type)}
             </span>
+            
+            {/* Right handle for this field */}
+            <Handle 
+              type="source" 
+              position={Position.Right}
+              id={`${field.name}-right`}
+              className="!w-2 !h-2 !bg-primary/60 !border-0 !-right-1"
+              style={{ top: '50%' }}
+            />
           </div>
         ))}
       </div>
@@ -142,12 +154,6 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
       <div className="px-3 py-1.5 border-t border-canvas-node-border bg-muted/20 text-[10px] text-muted-foreground">
         {data.rowCount.toLocaleString()} rows
       </div>
-      
-      <Handle 
-        type="source" 
-        position={Position.Right} 
-        className="!w-3 !h-3 !bg-canvas-node !border-2 !border-primary !-right-1.5" 
-      />
     </div>
   );
 };
@@ -279,11 +285,13 @@ export const RelationCanvas = () => {
   }, [openTables]);
   
   const initialEdges: Edge[] = useMemo(() => {
-    // Auto-detected relations - animated dashed lines with cardinality only
+    // Auto-detected relations - animated lines connecting specific fields
     const relEdges = autoDetectedRelations.map((rel, idx) => ({
       id: `auto-rel-${idx}`,
       source: rel.source,
       target: rel.target,
+      sourceHandle: `${rel.field}-right`, // Connect from source field's right handle
+      targetHandle: `${rel.field}-left`,  // Connect to target field's left handle
       label: rel.cardinality.toUpperCase(),
       type: 'smoothstep',
       animated: true,
