@@ -106,28 +106,34 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
           <div 
             key={`${field.name}-${idx}`}
             className={cn(
-              "px-3 py-1.5 flex items-center gap-2 text-xs hover:bg-muted/20 transition-colors relative",
+              "pl-0 pr-3 py-1.5 flex items-center text-xs hover:bg-muted/20 transition-colors relative",
               field.isPrimaryKey && "bg-amber-500/5"
             )}
           >
-            {/* Left handle for this field */}
+            {/* Left handle - flush to edge */}
             <Handle 
               type="target" 
               position={Position.Left}
               id={`${field.name}-left`}
-              className="!w-2 !h-2 !bg-primary/60 !border-0 !-left-1"
+              className="!w-1.5 !h-1.5 !bg-primary !border-0 !left-0 !translate-x-0"
               style={{ top: '50%' }}
             />
             
-            {/* Icons */}
-            <div className="flex items-center gap-1 w-8 justify-start">
-              <FieldIcon field={field} />
-              <NullableIcon nullable={field.nullable} />
+            {/* Icons container - fixed width columns for alignment */}
+            <div className="flex items-center pl-2">
+              {/* Column 1: Constraint icon (PK/FK/Unique/Identity) - fixed 14px */}
+              <div className="w-3.5 flex items-center justify-center flex-shrink-0">
+                <FieldIcon field={field} />
+              </div>
+              {/* Column 2: Nullable indicator - fixed 14px, always present */}
+              <div className="w-3.5 flex items-center justify-center flex-shrink-0">
+                <NullableIcon nullable={field.nullable} />
+              </div>
             </div>
             
             {/* Field name */}
             <span className={cn(
-              "flex-1 truncate",
+              "flex-1 truncate ml-1.5",
               field.isPrimaryKey ? "text-foreground font-medium" : "text-foreground/80"
             )}>
               {field.name}
@@ -138,12 +144,12 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
               {getTypeLabel(field.type)}
             </span>
             
-            {/* Right handle for this field */}
+            {/* Right handle - flush to edge */}
             <Handle 
               type="source" 
               position={Position.Right}
               id={`${field.name}-right`}
-              className="!w-2 !h-2 !bg-primary/60 !border-0 !-right-1"
+              className="!w-1.5 !h-1.5 !bg-primary !border-0 !right-0 !translate-x-0"
               style={{ top: '50%' }}
             />
           </div>
