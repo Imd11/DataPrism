@@ -1,7 +1,6 @@
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
-import { TableToolbar } from './TableToolbar';
 import { DataGrid } from './DataGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,48 +20,33 @@ export const TableWorkspace = () => {
   const activeTable = tables.find(t => t.id === activeTableId);
   const activeData = activeTableId ? getTableData(activeTableId) : [];
   
-  const handleAnalyze = () => {
-    if (activeTable) {
+  const handleColumnAction = (action: string, columns: string[]) => {
+    if (!activeTable) return;
+    
+    // Map actions to operation types
+    const actionMap: Record<string, { type: string; tab: 'summary' | 'quality' | 'history' }> = {
+      'summary': { type: 'summary', tab: 'summary' },
+      'filter': { type: 'filter', tab: 'history' },
+      'drop-missing': { type: 'clean', tab: 'quality' },
+      'fill-mean': { type: 'clean', tab: 'quality' },
+      'fill-median': { type: 'clean', tab: 'quality' },
+      'trim': { type: 'clean', tab: 'quality' },
+      'lowercase': { type: 'clean', tab: 'quality' },
+      'copy': { type: 'clean', tab: 'history' },
+      'hide': { type: 'clean', tab: 'history' },
+      'delete': { type: 'clean', tab: 'history' },
+    };
+    
+    const mapping = actionMap[action];
+    if (mapping) {
       addOperation({
-        type: 'summary',
+        type: mapping.type as any,
         tableId: activeTable.id,
         tableName: activeTable.name,
-        params: {},
-        undoable: false,
+        params: { action, columns },
+        undoable: action !== 'summary',
       });
-      setActiveResultTab('summary');
-    }
-  };
-  
-  const handleClean = (type: string) => {
-    if (activeTable) {
-      addOperation({
-        type: 'clean',
-        tableId: activeTable.id,
-        tableName: activeTable.name,
-        params: { cleanType: type },
-        undoable: true,
-      });
-      setActiveResultTab('quality');
-    }
-  };
-  
-  const handleReshape = (direction: string) => {
-    if (activeTable) {
-      addOperation({
-        type: 'reshape',
-        tableId: activeTable.id,
-        tableName: activeTable.name,
-        params: { direction },
-        undoable: false,
-      });
-      setActiveResultTab('reshape');
-    }
-  };
-  
-  const handleMerge = () => {
-    if (activeTable) {
-      setActiveResultTab('merge');
+      setActiveResultTab(mapping.tab);
     }
   };
   
@@ -125,22 +109,13 @@ export const TableWorkspace = () => {
         </AnimatePresence>
       </div>
       
-      {/* Toolbar */}
-      {activeTable && (
-        <TableToolbar 
-          onAnalyze={handleAnalyze}
-          onClean={handleClean}
-          onReshape={handleReshape}
-          onMerge={handleMerge}
-        />
-      )}
-      
       {/* Data Grid */}
       <div className="flex-1 min-h-0">
         {activeTable && (
           <DataGrid 
             data={activeData}
             fields={activeTable.fields}
+            onColumnAction={handleColumnAction}
           />
         )}
       </div>
