@@ -124,19 +124,19 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGrid
                 onClick={(e) => toggleColumnSelection(field.name, e)}
               >
                 {isSelected && (
-                  <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-foreground flex-shrink-0" />
                 )}
                 <span className="text-muted-foreground/60">{getTypeIcon(field.type)}</span>
                 <span className={cn(
                   "text-[13px] flex-1",
-                  isSelected ? "text-primary font-medium" : "text-muted-foreground"
+                  isSelected ? "text-foreground font-medium" : "text-muted-foreground"
                 )}>
                   {field.name}
                 </span>
                 {column.getIsSorted() === 'asc' ? (
-                  <ArrowUp className="w-3.5 h-3.5 text-primary" />
+                  <ArrowUp className="w-3.5 h-3.5 text-foreground" />
                 ) : column.getIsSorted() === 'desc' ? (
-                  <ArrowDown className="w-3.5 h-3.5 text-primary" />
+                  <ArrowDown className="w-3.5 h-3.5 text-foreground" />
                 ) : (
                   <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
                 )}
@@ -272,10 +272,10 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGrid
     >
       {/* Selection indicator */}
       {selectedColumns.size > 0 && (
-        <div className="sticky top-0 left-0 right-0 z-20 px-3 py-1.5 bg-primary/[0.08] border-b border-primary/15 text-[13px] text-primary flex items-center gap-2">
+        <div className="sticky top-0 left-0 right-0 z-20 px-3 py-1.5 bg-foreground/[0.06] border-b border-foreground/10 text-[13px] text-foreground flex items-center gap-2">
           <Check className="w-3.5 h-3.5" />
           <span className="font-medium">{selectedColumns.size} column{selectedColumns.size > 1 ? 's' : ''} selected</span>
-          <span className="text-primary/60">· Hold Shift or ⌘ to multi-select</span>
+          <span className="text-foreground/50">· Hold Shift or ⌘ to multi-select</span>
           <button 
             className="ml-auto text-[13px] hover:underline underline-offset-2"
             onClick={() => setSelectedColumns(new Set())}
@@ -294,7 +294,7 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGrid
                   key={header.id}
                   className={cn(
                     "px-3 py-2 text-left text-[13px] font-normal whitespace-nowrap border-r border-table-border last:border-r-0",
-                    selectedColumns.has(header.column.id) && "bg-primary/[0.04]"
+                    selectedColumns.has(header.column.id) && "bg-foreground/[0.03]"
                   )}
                   style={{ width: header.getSize() }}
                 >
@@ -328,7 +328,7 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGrid
                     key={cell.id}
                     className={cn(
                       "px-3 py-1.5 text-[13px] whitespace-nowrap border-r border-table-border last:border-r-0 max-w-[220px] overflow-hidden",
-                      selectedColumns.has(cell.column.id) && "bg-primary/[0.03]"
+                      selectedColumns.has(cell.column.id) && "bg-foreground/[0.02]"
                     )}
                     onClick={() => onCellClick?.(virtualRow.index, cell.column.id)}
                   >

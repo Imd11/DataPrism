@@ -47,8 +47,8 @@ export const ResultsPanel = () => {
             className={cn(
               "h-7 px-2.5 flex items-center gap-1.5 rounded-sm text-[13px] font-medium transition-colors duration-75 whitespace-nowrap",
               activeResultTab === tab.id
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
             )}
           >
             <tab.icon className="w-3.5 h-3.5" />

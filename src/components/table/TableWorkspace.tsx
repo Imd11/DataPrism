@@ -82,8 +82,8 @@ export const TableWorkspace = () => {
                 className={cn(
                   "group h-10 px-4 flex items-center gap-2.5 border-r border-border transition-all duration-75",
                   table.id === activeTableId
-                    ? "bg-[hsl(var(--tab-active-background))] text-foreground font-medium shadow-[inset_0_-2px_0_hsl(var(--primary))]"
-                    : "text-[hsl(var(--tab-foreground))] hover:bg-[hsl(var(--tab-hover-background))] hover:text-foreground"
+                    ? "bg-[hsl(var(--tab-active-background))] text-foreground font-medium shadow-[inset_0_-2px_0_hsl(var(--foreground)/0.8)]"
+                    : "text-[hsl(var(--tab-foreground))] hover:bg-foreground/[0.06] hover:text-foreground"
                 )}
                 onClick={() => setActiveTable(table.id)}
               >
@@ -92,7 +92,7 @@ export const TableWorkspace = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-dirty" title="Modified" />
                 )}
                 {table.sourceType === 'derived' && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-foreground/10 text-foreground/70 font-medium">
                     derived
                   </span>
                 )}
@@ -131,7 +131,7 @@ export const TableWorkspace = () => {
             <span className="text-dirty font-medium">Modified</span>
           )}
           {activeTable.sourceType === 'derived' && (
-            <span className="text-primary">
+            <span className="text-foreground/60">
               Derived from {activeTable.derivedFrom?.length || 0} table(s)
             </span>
           )}
