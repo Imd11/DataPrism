@@ -14,7 +14,30 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: [
+          'ui-sans-serif',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI Variable Display"',
+          '"Segoe UI"',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          '"Fira Sans"',
+          '"Droid Sans"',
+          '"Helvetica Neue"',
+          'sans-serif'
+        ],
+        mono: [
+          'ui-monospace',
+          'SFMono-Regular',
+          'SF Mono',
+          'Menlo',
+          'Consolas',
+          '"Liberation Mono"',
+          'monospace'
+        ],
       },
       colors: {
         border: "hsl(var(--border))",
