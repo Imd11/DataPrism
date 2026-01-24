@@ -3,9 +3,7 @@
 @tailwind utilities;
 
 /* Notion-inspired Design System - Refined & Elegant */
-
-/* Premium typography: System font stack with Notion-like refinement */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600&display=swap');
+/* Using system-native font stack for faster loading and native feel */
 
 @layer base {
   :root {
@@ -165,11 +163,24 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    /* Notion's system font stack - native feel on every platform */
+    font-family: 
+      ui-sans-serif,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI Variable Display",
+      "Segoe UI",
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      "Fira Sans",
+      "Droid Sans",
+      "Helvetica Neue",
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.003em;
   }
   
   /* Notion-style smooth scrollbar - almost invisible */
