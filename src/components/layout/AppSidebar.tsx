@@ -3,15 +3,15 @@ import {
   ChevronLeft, 
   ChevronRight,
   FolderOpen, 
-  FileSpreadsheet, 
-  Table2, 
+  Database, 
   Plus,
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
   Trash2,
   Pencil,
-  Upload
+  Upload,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -21,6 +21,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -65,13 +66,15 @@ interface SidebarItemProps {
   label: string;
   icon?: React.ReactNode;
   active?: boolean;
+  isOpen?: boolean;
   dirty?: boolean;
   meta?: string;
   onClick?: () => void;
+  onOpen?: () => void;
   onMenuAction?: (action: string) => void;
 }
 
-const SidebarItem = ({ label, icon, active, dirty, meta, onClick, onMenuAction }: SidebarItemProps) => {
+const SidebarItem = ({ label, icon, active, isOpen, dirty, meta, onClick, onOpen, onMenuAction }: SidebarItemProps) => {
   const [showMenu, setShowMenu] = useState(false);
   
   return (
@@ -89,6 +92,7 @@ const SidebarItem = ({ label, icon, active, dirty, meta, onClick, onMenuAction }
       {icon && <span className="text-sidebar-foreground/60">{icon}</span>}
       <span className="flex-1 truncate">{label}</span>
       {dirty && <span className="w-1.5 h-1.5 rounded-full bg-dirty" />}
+      {isOpen && <span className="w-1.5 h-1.5 rounded-full bg-primary" title="Open in workspace" />}
       {meta && <span className="text-xs text-sidebar-foreground/40">{meta}</span>}
       
       {onMenuAction && (
@@ -104,7 +108,16 @@ const SidebarItem = ({ label, icon, active, dirty, meta, onClick, onMenuAction }
               <MoreHorizontal className="w-3.5 h-3.5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36">
+          <DropdownMenuContent align="end" className="w-40">
+            {onOpen && (
+              <>
+                <DropdownMenuItem onClick={() => onOpen()}>
+                  <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                  Open
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem onClick={() => onMenuAction('rename')}>
               <Pencil className="w-3.5 h-3.5 mr-2" />
               Rename
@@ -123,12 +136,6 @@ const SidebarItem = ({ label, icon, active, dirty, meta, onClick, onMenuAction }
   );
 };
 
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
 export const AppSidebar = () => {
   const { 
     sidebarCollapsed, 
@@ -136,14 +143,13 @@ export const AppSidebar = () => {
     projects,
     currentProjectId,
     setCurrentProject,
-    files,
     tables,
     openTable,
-    activeTableId
+    activeTableId,
+    openTableIds
   } = useAppStore();
   
   const currentProject = projects.find(p => p.id === currentProjectId);
-  const projectFiles = files.filter(f => f.projectId === currentProjectId);
   
   if (sidebarCollapsed) {
     return (
@@ -166,6 +172,7 @@ export const AppSidebar = () => {
             variant="ghost"
             size="icon"
             className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-hover"
+            title="Projects"
           >
             <FolderOpen className="w-4 h-4" />
           </Button>
@@ -173,15 +180,9 @@ export const AppSidebar = () => {
             variant="ghost"
             size="icon"
             className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-hover"
+            title="Datasets"
           >
-            <FileSpreadsheet className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-hover"
-          >
-            <Table2 className="w-4 h-4" />
+            <Database className="w-4 h-4" />
           </Button>
         </div>
       </motion.div>
@@ -236,46 +237,30 @@ export const AppSidebar = () => {
           </div>
         </SidebarSection>
         
-        {/* Files Section */}
+        {/* Datasets Section */}
         <SidebarSection 
-          title="Files" 
-          icon={<FileSpreadsheet className="w-4 h-4" />}
-        >
-          <div className="ml-2">
-            {projectFiles.map(file => (
-              <SidebarItem
-                key={file.id}
-                label={file.name}
-                icon={<FileSpreadsheet className="w-3.5 h-3.5" />}
-                meta={formatFileSize(file.size)}
-                onMenuAction={(action) => console.log(action, file.id)}
-              />
-            ))}
-            <button className="flex items-center gap-2 px-3 py-1.5 mx-1 text-sm text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-hover rounded-md w-full transition-colors">
-              <Upload className="w-3.5 h-3.5" />
-              <span>Import File</span>
-            </button>
-          </div>
-        </SidebarSection>
-        
-        {/* Tables Section */}
-        <SidebarSection 
-          title="Tables" 
-          icon={<Table2 className="w-4 h-4" />}
+          title="Datasets" 
+          icon={<Database className="w-4 h-4" />}
         >
           <div className="ml-2">
             {tables.map(table => (
               <SidebarItem
                 key={table.id}
                 label={table.name}
-                icon={<Table2 className="w-3.5 h-3.5" />}
+                icon={<Database className="w-3.5 h-3.5" />}
                 active={table.id === activeTableId}
+                isOpen={openTableIds.includes(table.id)}
                 dirty={table.dirty}
                 meta={`${table.rowCount.toLocaleString()} rows`}
                 onClick={() => openTable(table.id)}
+                onOpen={() => openTable(table.id)}
                 onMenuAction={(action) => console.log(action, table.id)}
               />
             ))}
+            <button className="flex items-center gap-2 px-3 py-1.5 mx-1 text-sm text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-hover rounded-md w-full transition-colors">
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import Dataset</span>
+            </button>
           </div>
         </SidebarSection>
       </div>
