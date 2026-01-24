@@ -142,6 +142,13 @@ export default {
           background: "hsl(var(--results-background))",
           "tab-active": "hsl(var(--results-tab-active))",
         },
+        tab: {
+          background: "hsl(var(--tab-background))",
+          "active-background": "hsl(var(--tab-active-background))",
+          "hover-background": "hsl(var(--tab-hover-background))",
+          foreground: "hsl(var(--tab-foreground))",
+          "active-foreground": "hsl(var(--tab-active-foreground))",
+        },
         dirty: {
           DEFAULT: "hsl(var(--dirty))",
           foreground: "hsl(var(--dirty-foreground))",

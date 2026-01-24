@@ -117,8 +117,8 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGrid
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(
-                  "flex items-center gap-2 w-full text-left group px-1 py-1 -mx-1 rounded-sm transition-colors duration-75",
-                  "hover:bg-foreground/[0.04]",
+                  "flex items-center gap-2 w-full text-left group px-1.5 py-1 -mx-1.5 rounded-sm transition-colors duration-75",
+                  "hover:bg-foreground/[0.05]",
                   isSelected && "bg-primary/8"
                 )}
                 onClick={(e) => toggleColumnSelection(field.name, e)}
@@ -126,10 +126,10 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGrid
                 {isSelected && (
                   <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                 )}
-                <span className="text-muted-foreground/50">{getTypeIcon(field.type)}</span>
+                <span className="text-muted-foreground/60">{getTypeIcon(field.type)}</span>
                 <span className={cn(
-                  "font-medium text-[13px] flex-1",
-                  isSelected ? "text-primary" : "text-foreground/75"
+                  "text-[13px] flex-1",
+                  isSelected ? "text-primary font-medium" : "text-muted-foreground"
                 )}>
                   {field.name}
                 </span>
