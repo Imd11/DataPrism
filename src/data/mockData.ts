@@ -13,267 +13,261 @@ import type {
 export const mockProjects: Project[] = [
   {
     id: 'proj-1',
-    name: 'Panel Data Analysis',
+    name: 'E-Commerce Analytics',
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date('2024-01-20'),
-    tags: ['research', 'economics'],
-  },
-  {
-    id: 'proj-2',
-    name: 'Sales Dashboard',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-18'),
-    tags: ['business', 'quarterly'],
+    tags: ['sales', 'analytics'],
   },
 ];
 
 // Mock Files
 export const mockFiles: DataFile[] = [
-  {
-    id: 'file-1',
-    name: 'companies.csv',
-    type: 'csv',
-    size: 245000,
-    updatedAt: new Date('2024-01-15'),
-    projectId: 'proj-1',
-  },
-  {
-    id: 'file-2',
-    name: 'financials.xlsx',
-    type: 'xlsx',
-    size: 512000,
-    updatedAt: new Date('2024-01-16'),
-    projectId: 'proj-1',
-  },
-  {
-    id: 'file-3',
-    name: 'years.csv',
-    type: 'csv',
-    size: 12000,
-    updatedAt: new Date('2024-01-14'),
-    projectId: 'proj-1',
-  },
-  {
-    id: 'file-4',
-    name: 'orders.csv',
-    type: 'csv',
-    size: 1024000,
-    updatedAt: new Date('2024-01-17'),
-    projectId: 'proj-2',
-  },
-  {
-    id: 'file-5',
-    name: 'customers.xlsx',
-    type: 'xlsx',
-    size: 256000,
-    updatedAt: new Date('2024-01-18'),
-    projectId: 'proj-2',
-  },
+  { id: 'file-1', name: 'customers.csv', type: 'csv', size: 125000, updatedAt: new Date('2024-01-15'), projectId: 'proj-1' },
+  { id: 'file-2', name: 'products.csv', type: 'csv', size: 85000, updatedAt: new Date('2024-01-16'), projectId: 'proj-1' },
+  { id: 'file-3', name: 'orders.csv', type: 'csv', size: 512000, updatedAt: new Date('2024-01-17'), projectId: 'proj-1' },
+  { id: 'file-4', name: 'order_items.csv', type: 'csv', size: 1024000, updatedAt: new Date('2024-01-17'), projectId: 'proj-1' },
+  { id: 'file-5', name: 'categories.csv', type: 'csv', size: 12000, updatedAt: new Date('2024-01-14'), projectId: 'proj-1' },
 ];
 
-// Mock Tables
+// ============================================
+// REALISTIC E-COMMERCE DATA TABLES
+// ============================================
+
+// 1. CUSTOMERS - 客户表 (customer_id 是主键)
 export const mockTables: DataTable[] = [
-  {
-    id: 'table-companies',
-    name: 'companies',
-    fields: [
-      { name: 'id', type: 'uuid', nullable: false, isPrimaryKey: true, isIdentity: true },
-      { name: 'company_id', type: 'text', nullable: false, isUnique: true },
-      { name: 'company_name', type: 'varchar', nullable: false },
-      { name: 'industry', type: 'text', nullable: true, missingCount: 5, missingRate: 0.02 },
-      { name: 'founded_year', type: 'int4', nullable: true, missingCount: 12, missingRate: 0.05 },
-      { name: 'employees', type: 'int4', nullable: true, missingCount: 8, missingRate: 0.03 },
-      { name: 'country', type: 'text', nullable: false },
-      { name: 'created_at', type: 'timestamptz', nullable: false },
-      { name: 'updated_at', type: 'timestamptz', nullable: true },
-    ],
-    rowCount: 250,
-    sourceType: 'imported',
-    dirty: false,
-    sourceFileId: 'file-1',
-  },
-  {
-    id: 'table-financials',
-    name: 'financials',
-    fields: [
-      { name: 'id', type: 'uuid', nullable: false, isPrimaryKey: true, isIdentity: true },
-      { name: 'company_id', type: 'text', nullable: false, isForeignKey: true, refTable: 'companies', refField: 'company_id' },
-      { name: 'year', type: 'int4', nullable: false },
-      { name: 'revenue', type: 'float8', nullable: true, missingCount: 15, missingRate: 0.03 },
-      { name: 'profit', type: 'float8', nullable: true, missingCount: 22, missingRate: 0.04 },
-      { name: 'assets', type: 'float8', nullable: true, missingCount: 8, missingRate: 0.02 },
-      { name: 'liabilities', type: 'float8', nullable: true, missingCount: 8, missingRate: 0.02 },
-      { name: 'created_at', type: 'timestamptz', nullable: false },
-    ],
-    rowCount: 500,
-    sourceType: 'imported',
-    dirty: true,
-    sourceFileId: 'file-2',
-  },
-  {
-    id: 'table-orders',
-    name: 'orders',
-    fields: [
-      { name: 'id', type: 'uuid', nullable: false, isPrimaryKey: true, isIdentity: true },
-      { name: 'order_id', type: 'text', nullable: false, isUnique: true },
-      { name: 'customer_id', type: 'text', nullable: false, isForeignKey: true, refTable: 'customers', refField: 'customer_id' },
-      { name: 'order_date', type: 'timestamptz', nullable: false },
-      { name: 'amount', type: 'float8', nullable: false },
-      { name: 'status', type: 'text', nullable: false },
-      { name: 'metadata', type: 'jsonb', nullable: true },
-    ],
-    rowCount: 1250,
-    sourceType: 'imported',
-    dirty: false,
-    sourceFileId: 'file-4',
-  },
   {
     id: 'table-customers',
     name: 'customers',
     fields: [
-      { name: 'id', type: 'uuid', nullable: false, isPrimaryKey: true, isIdentity: true },
-      { name: 'customer_id', type: 'text', nullable: false, isUnique: true },
-      { name: 'name', type: 'varchar', nullable: false },
-      { name: 'email', type: 'text', nullable: true, missingCount: 45, missingRate: 0.09 },
-      { name: 'region', type: 'text', nullable: false },
-      { name: 'signup_date', type: 'timestamptz', nullable: false },
-      { name: 'preferences', type: 'jsonb', nullable: true },
+      { name: 'customer_id', type: 'int4', nullable: false, isPrimaryKey: true, isUnique: true },
+      { name: 'first_name', type: 'varchar', nullable: false },
+      { name: 'last_name', type: 'varchar', nullable: false },
+      { name: 'email', type: 'text', nullable: true, missingCount: 12, missingRate: 0.04 },
+      { name: 'phone', type: 'varchar', nullable: true, missingCount: 35, missingRate: 0.12 },
+      { name: 'city', type: 'varchar', nullable: false },
+      { name: 'country', type: 'varchar', nullable: false },
+      { name: 'created_at', type: 'timestamptz', nullable: false },
     ],
-    rowCount: 500,
+    rowCount: 300,
+    sourceType: 'imported',
+    dirty: false,
+    sourceFileId: 'file-1',
+  },
+  
+  // 2. CATEGORIES - 商品类别表 (category_id 是主键)
+  {
+    id: 'table-categories',
+    name: 'categories',
+    fields: [
+      { name: 'category_id', type: 'int4', nullable: false, isPrimaryKey: true, isUnique: true },
+      { name: 'category_name', type: 'varchar', nullable: false },
+      { name: 'description', type: 'text', nullable: true },
+    ],
+    rowCount: 8,
     sourceType: 'imported',
     dirty: false,
     sourceFileId: 'file-5',
   },
-  {
-    id: 'table-panel',
-    name: 'panel_merged',
-    fields: [
-      { name: 'id', type: 'uuid', nullable: false, isPrimaryKey: true },
-      { name: 'company_id', type: 'text', nullable: false },
-      { name: 'company_name', type: 'varchar', nullable: false },
-      { name: 'year', type: 'int4', nullable: false },
-      { name: 'industry', type: 'text', nullable: true },
-      { name: 'revenue', type: 'float8', nullable: true },
-      { name: 'profit', type: 'float8', nullable: true },
-      { name: 'created_at', type: 'timestamptz', nullable: false },
-    ],
-    rowCount: 500,
-    sourceType: 'derived',
-    dirty: false,
-    derivedFrom: ['table-companies', 'table-financials'],
-    operation: 'merge',
-  },
-];
-
-// Mock Relations (PK/FK)
-export const mockRelations: RelationEdge[] = [
-  {
-    id: 'rel-1',
-    fkTableId: 'table-financials',
-    fkFields: ['company_id'],
-    pkTableId: 'table-companies',
-    pkFields: ['company_id'],
-    cardinality: '1:m',
-  },
-  {
-    id: 'rel-2',
-    fkTableId: 'table-orders',
-    fkFields: ['customer_id'],
-    pkTableId: 'table-customers',
-    pkFields: ['customer_id'],
-    cardinality: '1:m',
-  },
-];
-
-// Mock Lineages
-export const mockLineages: LineageEdge[] = [
-  {
-    id: 'lin-1',
-    derivedTableId: 'table-panel',
-    sourceTableIds: ['table-companies', 'table-financials'],
-    operation: 'merge',
-  },
-];
-
-// Mock Table Data
-const generateCompanyData = (): RowData[] => {
-  const industries = ['Technology', 'Finance', 'Healthcare', 'Manufacturing', 'Retail', null];
-  const countries = ['USA', 'China', 'Germany', 'Japan', 'UK', 'France'];
   
-  return Array.from({ length: 50 }, (_, i) => ({
-    company_id: `C${String(i + 1).padStart(4, '0')}`,
-    company_name: `Company ${i + 1}`,
-    industry: industries[Math.floor(Math.random() * industries.length)],
-    founded_year: Math.random() > 0.05 ? 1980 + Math.floor(Math.random() * 44) : null,
-    employees: Math.random() > 0.03 ? Math.floor(Math.random() * 50000) + 50 : null,
-    country: countries[Math.floor(Math.random() * countries.length)],
-  }));
+  // 3. PRODUCTS - 产品表 (product_id 是主键, category_id 关联类别)
+  {
+    id: 'table-products',
+    name: 'products',
+    fields: [
+      { name: 'product_id', type: 'int4', nullable: false, isPrimaryKey: true, isUnique: true },
+      { name: 'product_name', type: 'varchar', nullable: false },
+      { name: 'category_id', type: 'int4', nullable: false, isForeignKey: true, refTable: 'categories', refField: 'category_id' },
+      { name: 'price', type: 'float8', nullable: false },
+      { name: 'stock_quantity', type: 'int4', nullable: false },
+      { name: 'supplier', type: 'varchar', nullable: true, missingCount: 8, missingRate: 0.08 },
+    ],
+    rowCount: 100,
+    sourceType: 'imported',
+    dirty: false,
+    sourceFileId: 'file-2',
+  },
+  
+  // 4. ORDERS - 订单表 (order_id 是主键, customer_id 关联客户)
+  {
+    id: 'table-orders',
+    name: 'orders',
+    fields: [
+      { name: 'order_id', type: 'int4', nullable: false, isPrimaryKey: true, isUnique: true },
+      { name: 'customer_id', type: 'int4', nullable: false, isForeignKey: true, refTable: 'customers', refField: 'customer_id' },
+      { name: 'order_date', type: 'date', nullable: false },
+      { name: 'ship_date', type: 'date', nullable: true, missingCount: 45, missingRate: 0.06 },
+      { name: 'status', type: 'varchar', nullable: false },
+      { name: 'total_amount', type: 'float8', nullable: false },
+    ],
+    rowCount: 750,
+    sourceType: 'imported',
+    dirty: true,
+    sourceFileId: 'file-3',
+  },
+  
+  // 5. ORDER_ITEMS - 订单明细表 (order_id + product_id 关联)
+  {
+    id: 'table-order-items',
+    name: 'order_items',
+    fields: [
+      { name: 'item_id', type: 'int4', nullable: false, isPrimaryKey: true, isUnique: true },
+      { name: 'order_id', type: 'int4', nullable: false, isForeignKey: true, refTable: 'orders', refField: 'order_id' },
+      { name: 'product_id', type: 'int4', nullable: false, isForeignKey: true, refTable: 'products', refField: 'product_id' },
+      { name: 'quantity', type: 'int4', nullable: false },
+      { name: 'unit_price', type: 'float8', nullable: false },
+      { name: 'discount', type: 'float8', nullable: true },
+    ],
+    rowCount: 2150,
+    sourceType: 'imported',
+    dirty: false,
+    sourceFileId: 'file-4',
+  },
+];
+
+// Mock Relations (PK/FK) - 这些是硬编码的，但 Canvas 会自动检测
+export const mockRelations: RelationEdge[] = [];
+
+// Mock Lineages - 用于派生表
+export const mockLineages: LineageEdge[] = [];
+
+// ============================================
+// REALISTIC DATA GENERATORS
+// ============================================
+
+const firstNames = ['Emma', 'Liam', 'Olivia', 'Noah', 'Ava', 'Oliver', 'Sophia', 'Elijah', 'Isabella', 'James', 'Mia', 'Benjamin', 'Charlotte', 'Lucas', 'Amelia', 'Mason', 'Harper', 'Ethan', 'Evelyn', 'Alexander'];
+const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
+const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose', 'Austin', 'Jacksonville', 'Fort Worth', 'Columbus', 'Charlotte'];
+const countries = ['USA', 'Canada', 'UK', 'Germany', 'France', 'Australia', 'Japan'];
+
+const generateCustomersData = (): RowData[] => {
+  return Array.from({ length: 300 }, (_, i) => {
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const date = new Date(2022, Math.floor(Math.random() * 24), Math.floor(Math.random() * 28) + 1);
+    
+    return {
+      customer_id: i + 1,
+      first_name: firstName,
+      last_name: lastName,
+      email: Math.random() > 0.04 ? `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@email.com` : null,
+      phone: Math.random() > 0.12 ? `+1-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}` : null,
+      city: cities[Math.floor(Math.random() * cities.length)],
+      country: countries[Math.floor(Math.random() * countries.length)],
+      created_at: date.toISOString(),
+    };
+  });
 };
 
-const generateFinancialsData = (): RowData[] => {
-  const years = [2020, 2021, 2022, 2023];
-  const data: RowData[] = [];
+const categories = [
+  { category_id: 1, category_name: 'Electronics', description: 'Electronic devices and accessories' },
+  { category_id: 2, category_name: 'Clothing', description: 'Apparel and fashion items' },
+  { category_id: 3, category_name: 'Home & Garden', description: 'Home improvement and garden supplies' },
+  { category_id: 4, category_name: 'Sports', description: 'Sports equipment and outdoor gear' },
+  { category_id: 5, category_name: 'Books', description: 'Books, magazines, and publications' },
+  { category_id: 6, category_name: 'Toys', description: 'Toys and games for all ages' },
+  { category_id: 7, category_name: 'Beauty', description: 'Beauty and personal care products' },
+  { category_id: 8, category_name: 'Food', description: 'Food and beverages' },
+];
+
+const generateCategoriesData = (): RowData[] => categories;
+
+const productNames: Record<number, string[]> = {
+  1: ['Wireless Headphones', 'Smart Watch', 'Bluetooth Speaker', 'USB-C Hub', 'Mechanical Keyboard', 'Gaming Mouse', 'Webcam HD', '4K Monitor', 'Tablet Stand', 'Power Bank', 'Wireless Charger', 'Smart Bulb'],
+  2: ['Cotton T-Shirt', 'Denim Jeans', 'Wool Sweater', 'Running Shoes', 'Leather Belt', 'Silk Scarf', 'Winter Jacket', 'Casual Shorts', 'Dress Shirt', 'Sports Socks', 'Baseball Cap', 'Sunglasses'],
+  3: ['Garden Hose', 'LED Desk Lamp', 'Tool Set', 'Plant Pot', 'Wall Clock', 'Throw Pillow', 'Area Rug', 'Storage Box', 'Picture Frame', 'Candle Set', 'Door Mat', 'Curtains'],
+  4: ['Yoga Mat', 'Dumbbells Set', 'Tennis Racket', 'Soccer Ball', 'Bike Helmet', 'Swimming Goggles', 'Camping Tent', 'Hiking Backpack', 'Jump Rope', 'Resistance Bands', 'Water Bottle', 'Fitness Tracker'],
+  5: ['Fiction Novel', 'Cookbook', 'Self-Help Book', 'History Book', 'Science Journal', 'Art Magazine', 'Travel Guide', 'Biography', 'Poetry Collection', 'Graphic Novel', 'Dictionary', 'Textbook'],
+  6: ['Building Blocks', 'Board Game', 'Puzzle Set', 'Action Figure', 'Stuffed Animal', 'RC Car', 'Card Game', 'Science Kit', 'Doll House', 'Play Dough', 'Toy Train', 'Musical Toy'],
+  7: ['Face Cream', 'Lipstick', 'Shampoo', 'Perfume', 'Nail Polish', 'Hair Dryer', 'Makeup Brush', 'Sunscreen', 'Body Lotion', 'Face Mask', 'Eye Shadow', 'Mascara'],
+  8: ['Organic Coffee', 'Green Tea', 'Chocolate Bar', 'Olive Oil', 'Honey Jar', 'Pasta Pack', 'Spice Set', 'Snack Mix', 'Energy Bar', 'Fruit Jam', 'Rice Pack', 'Cereal Box'],
+};
+
+const suppliers = ['GlobalTech', 'PrimeSupply', 'DirectSource', 'QualityFirst', 'ValueMart', null, 'TopGoods', 'BestDeal'];
+
+const generateProductsData = (): RowData[] => {
+  const products: RowData[] = [];
+  let productId = 1;
   
-  for (let i = 1; i <= 50; i++) {
-    for (const year of years) {
-      data.push({
-        company_id: `C${String(i).padStart(4, '0')}`,
-        year,
-        revenue: Math.random() > 0.03 ? Math.floor(Math.random() * 1000000000) : null,
-        profit: Math.random() > 0.04 ? Math.floor(Math.random() * 100000000) - 10000000 : null,
-        assets: Math.random() > 0.02 ? Math.floor(Math.random() * 500000000) : null,
-        liabilities: Math.random() > 0.02 ? Math.floor(Math.random() * 300000000) : null,
+  for (let catId = 1; catId <= 8; catId++) {
+    const names = productNames[catId];
+    for (const name of names) {
+      products.push({
+        product_id: productId++,
+        product_name: name,
+        category_id: catId,
+        price: Math.round((Math.random() * 200 + 10) * 100) / 100,
+        stock_quantity: Math.floor(Math.random() * 500) + 10,
+        supplier: suppliers[Math.floor(Math.random() * suppliers.length)],
       });
     }
   }
   
-  return data;
+  return products;
 };
+
+const orderStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 
 const generateOrdersData = (): RowData[] => {
-  const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-  
-  return Array.from({ length: 100 }, (_, i) => {
-    const date = new Date(2024, 0, 1);
-    date.setDate(date.getDate() + Math.floor(Math.random() * 30));
+  return Array.from({ length: 750 }, (_, i) => {
+    const orderDate = new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1);
+    const status = orderStatuses[Math.floor(Math.random() * orderStatuses.length)];
+    let shipDate: string | null = null;
+    
+    if (status === 'Shipped' || status === 'Delivered') {
+      const ship = new Date(orderDate);
+      ship.setDate(ship.getDate() + Math.floor(Math.random() * 5) + 1);
+      shipDate = ship.toISOString().split('T')[0];
+    }
     
     return {
-      order_id: `ORD${String(i + 1).padStart(6, '0')}`,
-      customer_id: `CUST${String(Math.floor(Math.random() * 50) + 1).padStart(4, '0')}`,
-      order_date: date.toISOString().split('T')[0],
-      amount: Math.floor(Math.random() * 5000) + 50,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
+      order_id: 1000 + i,
+      customer_id: Math.floor(Math.random() * 300) + 1,
+      order_date: orderDate.toISOString().split('T')[0],
+      ship_date: shipDate,
+      status,
+      total_amount: Math.round((Math.random() * 500 + 20) * 100) / 100,
     };
   });
 };
 
-const generateCustomersData = (): RowData[] => {
-  const regions = ['North', 'South', 'East', 'West', 'Central'];
-  const firstNames = ['John', 'Jane', 'Mike', 'Sarah', 'David', 'Emily', 'Chris', 'Lisa'];
-  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller'];
+const generateOrderItemsData = (): RowData[] => {
+  const items: RowData[] = [];
+  let itemId = 1;
   
-  return Array.from({ length: 50 }, (_, i) => {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const date = new Date(2023, 0, 1);
-    date.setDate(date.getDate() + Math.floor(Math.random() * 365));
+  // Each order has 1-5 items
+  for (let orderId = 1000; orderId < 1750; orderId++) {
+    const itemCount = Math.floor(Math.random() * 4) + 1;
+    const usedProducts = new Set<number>();
     
-    return {
-      customer_id: `CUST${String(i + 1).padStart(4, '0')}`,
-      name: `${firstName} ${lastName}`,
-      email: Math.random() > 0.09 ? `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com` : null,
-      region: regions[Math.floor(Math.random() * regions.length)],
-      signup_date: date.toISOString().split('T')[0],
-    };
-  });
+    for (let j = 0; j < itemCount; j++) {
+      let productId: number;
+      do {
+        productId = Math.floor(Math.random() * 96) + 1;
+      } while (usedProducts.has(productId));
+      usedProducts.add(productId);
+      
+      const unitPrice = Math.round((Math.random() * 100 + 10) * 100) / 100;
+      
+      items.push({
+        item_id: itemId++,
+        order_id: orderId,
+        product_id: productId,
+        quantity: Math.floor(Math.random() * 5) + 1,
+        unit_price: unitPrice,
+        discount: Math.random() > 0.7 ? Math.round(Math.random() * 20) / 100 : null,
+      });
+    }
+  }
+  
+  return items;
 };
 
 export const mockTableData: Record<string, RowData[]> = {
-  'table-companies': generateCompanyData(),
-  'table-financials': generateFinancialsData(),
-  'table-orders': generateOrdersData(),
   'table-customers': generateCustomersData(),
-  'table-panel': [], // Would be derived from merge
+  'table-categories': generateCategoriesData(),
+  'table-products': generateProductsData(),
+  'table-orders': generateOrdersData(),
+  'table-order-items': generateOrderItemsData(),
 };
 
 // Generate summary for a table
