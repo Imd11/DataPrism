@@ -67,8 +67,8 @@ export const TableWorkspace = () => {
   
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Tab Bar */}
-      <div className="h-9 flex items-center border-b border-border bg-muted/20 overflow-x-auto">
+      {/* Tab Bar - Elevated from table content */}
+      <div className="flex items-center border-b border-border bg-[hsl(var(--tab-background))] overflow-x-auto shrink-0">
         <AnimatePresence mode="popLayout">
           {openTables.map(table => (
             <motion.div
@@ -80,14 +80,14 @@ export const TableWorkspace = () => {
             >
               <button
                 className={cn(
-                  "group h-9 px-3 flex items-center gap-2 border-r border-border text-[13px] transition-colors duration-75",
+                  "group h-10 px-4 flex items-center gap-2.5 border-r border-border transition-all duration-75",
                   table.id === activeTableId
-                    ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    ? "bg-[hsl(var(--tab-active-background))] text-foreground font-medium shadow-[inset_0_-2px_0_hsl(var(--primary))]"
+                    : "text-[hsl(var(--tab-foreground))] hover:bg-[hsl(var(--tab-hover-background))] hover:text-foreground"
                 )}
                 onClick={() => setActiveTable(table.id)}
               >
-                <span className="max-w-[120px] truncate">{table.name}</span>
+                <span className="max-w-[140px] truncate text-[13px]">{table.name}</span>
                 {table.dirty && (
                   <span className="w-1.5 h-1.5 rounded-full bg-dirty" title="Modified" />
                 )}
@@ -97,13 +97,13 @@ export const TableWorkspace = () => {
                   </span>
                 )}
                 <button
-                  className="p-0.5 rounded-sm hover:bg-foreground/[0.08] opacity-0 group-hover:opacity-100 transition-opacity duration-75"
+                  className="p-0.5 rounded-sm hover:bg-foreground/[0.08] opacity-0 group-hover:opacity-100 transition-opacity duration-75 ml-1"
                   onClick={(e) => {
                     e.stopPropagation();
                     closeTable(table.id);
                   }}
                 >
-                  <X className="w-3 h-3 text-muted-foreground" />
+                  <X className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </button>
             </motion.div>
