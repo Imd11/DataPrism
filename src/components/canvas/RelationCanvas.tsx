@@ -106,34 +106,34 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
           <div 
             key={`${field.name}-${idx}`}
             className={cn(
-              "pl-0 pr-3 py-1.5 flex items-center text-xs hover:bg-muted/20 transition-colors relative",
+              "px-3 py-1.5 flex items-center text-xs hover:bg-muted/20 transition-colors relative",
               field.isPrimaryKey && "bg-amber-500/5"
             )}
           >
-            {/* Left handle - flush to edge */}
+            {/* Left handle - invisible, only for edge connections */}
             <Handle 
               type="target" 
               position={Position.Left}
               id={`${field.name}-left`}
-              className="!w-1.5 !h-1.5 !bg-primary !border-0 !left-0 !translate-x-0"
-              style={{ top: '50%' }}
+              className="!w-0 !h-0 !bg-transparent !border-0 !min-w-0 !min-h-0"
+              style={{ top: '50%', left: 0, opacity: 0 }}
             />
             
             {/* Icons container - fixed width columns for alignment */}
-            <div className="flex items-center pl-2">
-              {/* Column 1: Constraint icon (PK/FK/Unique/Identity) - fixed 14px */}
-              <div className="w-3.5 flex items-center justify-center flex-shrink-0">
-                <FieldIcon field={field} />
-              </div>
-              {/* Column 2: Nullable indicator - fixed 14px, always present */}
-              <div className="w-3.5 flex items-center justify-center flex-shrink-0">
+            <div className="flex items-center gap-0">
+              {/* Column 1: Nullable indicator - always first for alignment */}
+              <div className="w-4 flex items-center justify-center flex-shrink-0">
                 <NullableIcon nullable={field.nullable} />
+              </div>
+              {/* Column 2: Constraint icon (PK/FK/Unique/Identity) */}
+              <div className="w-4 flex items-center justify-center flex-shrink-0">
+                <FieldIcon field={field} />
               </div>
             </div>
             
             {/* Field name */}
             <span className={cn(
-              "flex-1 truncate ml-1.5",
+              "flex-1 truncate ml-2",
               field.isPrimaryKey ? "text-foreground font-medium" : "text-foreground/80"
             )}>
               {field.name}
@@ -144,13 +144,13 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
               {getTypeLabel(field.type)}
             </span>
             
-            {/* Right handle - flush to edge */}
+            {/* Right handle - invisible, only for edge connections */}
             <Handle 
               type="source" 
               position={Position.Right}
               id={`${field.name}-right`}
-              className="!w-1.5 !h-1.5 !bg-primary !border-0 !right-0 !translate-x-0"
-              style={{ top: '50%' }}
+              className="!w-0 !h-0 !bg-transparent !border-0 !min-w-0 !min-h-0"
+              style={{ top: '50%', right: 0, opacity: 0 }}
             />
           </div>
         ))}
