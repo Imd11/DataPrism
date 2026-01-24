@@ -186,8 +186,62 @@ const CanvasLegend = () => {
   );
 };
 
+// Detect shared fields between tables and determine cardinality
+const detectTableRelations = (tables: { id: string; fields: Field[] }[]): {
+  source: string;
+  target: string;
+  field: string;
+  cardinality: '1:1' | '1:m' | 'm:1';
+}[] => {
+  const relations: { source: string; target: string; field: string; cardinality: '1:1' | '1:m' | 'm:1' }[] = [];
+  
+  for (let i = 0; i < tables.length; i++) {
+    for (let j = i + 1; j < tables.length; j++) {
+      const tableA = tables[i];
+      const tableB = tables[j];
+      
+      // Find shared field names
+      const fieldsA = tableA.fields;
+      const fieldsB = tableB.fields;
+      
+      for (const fieldA of fieldsA) {
+        const fieldB = fieldsB.find(f => f.name === fieldA.name);
+        if (fieldB) {
+          // Shared field found - determine cardinality
+          const isUniqueInA = fieldA.isPrimaryKey || fieldA.isUnique || fieldA.isIdentity;
+          const isUniqueInB = fieldB.isPrimaryKey || fieldB.isUnique || fieldB.isIdentity;
+          
+          let cardinality: '1:1' | '1:m' | 'm:1';
+          if (isUniqueInA && isUniqueInB) {
+            cardinality = '1:1';
+          } else if (isUniqueInA && !isUniqueInB) {
+            cardinality = '1:m'; // A is the "1" side
+          } else if (!isUniqueInA && isUniqueInB) {
+            cardinality = 'm:1'; // B is the "1" side
+          } else {
+            // Both non-unique - still can connect, default to m:1
+            cardinality = 'm:1';
+          }
+          
+          relations.push({
+            source: tableA.id,
+            target: tableB.id,
+            field: fieldA.name,
+            cardinality,
+          });
+        }
+      }
+    }
+  }
+  
+  return relations;
+};
+
 export const RelationCanvas = () => {
-  const { tables, relations, lineages, selectedNodeId, setSelectedNode, setActiveTable, openTable } = useAppStore();
+  const { tables, lineages, selectedNodeId, setSelectedNode, setActiveTable, openTable } = useAppStore();
+  
+  // Auto-detect relations based on shared fields
+  const autoDetectedRelations = useMemo(() => detectTableRelations(tables), [tables]);
   
   const initialNodes: Node[] = useMemo(() => {
     const positions: Record<string, { x: number; y: number }> = {
@@ -212,18 +266,24 @@ export const RelationCanvas = () => {
   }, [tables]);
   
   const initialEdges: Edge[] = useMemo(() => {
-    const relEdges = relations.map(rel => ({
-      id: rel.id,
-      source: rel.pkTableId,
-      target: rel.fkTableId,
-      label: rel.cardinality,
+    // Auto-detected relations - dashed lines with cardinality
+    const relEdges = autoDetectedRelations.map((rel, idx) => ({
+      id: `auto-rel-${idx}`,
+      source: rel.source,
+      target: rel.target,
+      label: `${rel.field} (${rel.cardinality})`,
       type: 'smoothstep',
       markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
-      style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+      style: { 
+        stroke: 'hsl(var(--primary))', 
+        strokeWidth: 2,
+        strokeDasharray: '6,4', // Dashed line
+      },
       labelStyle: { fontSize: 10, fill: 'hsl(var(--primary))', fontWeight: 500 },
       labelBgStyle: { fill: 'hsl(var(--background))', fillOpacity: 0.9 },
     }));
     
+    // Lineage edges - orange animated lines for derived tables
     const linEdges = lineages.map(lin => ({
       id: lin.id,
       source: lin.sourceTableIds[0],
@@ -235,7 +295,7 @@ export const RelationCanvas = () => {
     }));
     
     return [...relEdges, ...linEdges];
-  }, [relations, lineages]);
+  }, [autoDetectedRelations, lineages]);
   
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
