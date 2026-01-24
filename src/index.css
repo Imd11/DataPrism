@@ -2,24 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Notion-inspired Design System - Refined & Elegant */
-/* Using system-native font stack for faster loading and native feel */
+/* ============================================================================
+   Notion-inspired Design System
+   
+   Typography Philosophy:
+   - System font stack for native feel (San Francisco on Mac, Segoe UI on Windows)
+   - Chinese font fallbacks (PingFang SC, Microsoft YaHei, Noto Sans CJK)
+   - Refined letter-spacing and line-height for optimal readability
+   - Tabular numbers for perfect alignment in tables
+   ============================================================================ */
 
 @layer base {
   :root {
-    /* Core Palette - Warm, refined neutrals like Notion */
+    /* Core Palette - Warm, refined neutrals inspired by Notion */
     --background: 0 0% 100%;
-    --foreground: 24 6% 16%;
+    --foreground: 24 10% 10%;
     
-    /* Surfaces with warmth */
+    /* Surfaces with subtle warmth */
     --card: 40 33% 99%;
-    --card-foreground: 24 6% 16%;
+    --card-foreground: 24 10% 10%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 24 6% 16%;
+    --popover-foreground: 24 10% 10%;
     
-    /* Primary - Subtle blue, not too saturated */
-    --primary: 213 100% 52%;
+    /* Primary - Refined blue, not too saturated */
+    --primary: 213 94% 48%;
     --primary-foreground: 0 0% 100%;
     
     /* Secondary - Warm gray */
@@ -28,64 +35,64 @@
     
     /* Muted - Refined gray tones */
     --muted: 40 14% 96%;
-    --muted-foreground: 24 5% 45%;
+    --muted-foreground: 24 5% 42%;
     
     /* Accent - Very subtle warm tint */
     --accent: 40 20% 95%;
-    --accent-foreground: 24 6% 16%;
+    --accent-foreground: 24 10% 10%;
     
     /* Status colors - Refined, not harsh */
-    --destructive: 0 72% 51%;
+    --destructive: 0 68% 50%;
     --destructive-foreground: 0 0% 100%;
     
-    --success: 145 63% 42%;
+    --success: 145 63% 40%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 95% 50%;
-    --warning-foreground: 24 6% 16%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 24 10% 10%;
     
-    --info: 201 96% 45%;
+    --info: 201 90% 48%;
     --info-foreground: 0 0% 100%;
     
     /* Borders - Ultra subtle, Notion-like */
-    --border: 24 6% 91%;
-    --input: 24 6% 91%;
-    --ring: 213 100% 52%;
+    --border: 24 6% 90%;
+    --input: 24 6% 90%;
+    --ring: 213 94% 48%;
     
     --radius: 0.375rem;
     
     /* Sidebar - Warm, refined feel */
     --sidebar-background: 40 25% 98.5%;
-    --sidebar-foreground: 24 8% 25%;
-    --sidebar-primary: 213 100% 52%;
+    --sidebar-foreground: 24 10% 20%;
+    --sidebar-primary: 213 94% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 40 18% 95%;
-    --sidebar-accent-foreground: 24 6% 16%;
-    --sidebar-border: 24 6% 93%;
-    --sidebar-ring: 213 100% 52%;
+    --sidebar-accent-foreground: 24 10% 10%;
+    --sidebar-border: 24 6% 92%;
+    --sidebar-ring: 213 94% 48%;
     --sidebar-hover: 40 18% 94%;
     
     /* Canvas - Clean workspace */
     --canvas-background: 40 20% 98%;
-    --canvas-grid: 24 6% 93%;
+    --canvas-grid: 24 6% 92%;
     --canvas-node: 0 0% 100%;
     --canvas-node-border: 24 6% 88%;
-    --canvas-edge: 213 100% 52%;
-    --canvas-edge-lineage: 38 95% 50%;
+    --canvas-edge: 213 94% 48%;
+    --canvas-edge-lineage: 38 92% 50%;
     
     /* Table - Notion database style */
-    --table-header: 40 18% 98%;
-    --table-row-hover: 40 20% 98%;
+    --table-header: 40 20% 98.5%;
+    --table-row-hover: 40 20% 97.5%;
     --table-row-selected: 213 80% 97%;
-    --table-border: 24 6% 93%;
+    --table-border: 24 6% 92%;
     
     /* Results panel */
     --results-background: 0 0% 100%;
-    --results-tab-active: 213 100% 52%;
+    --results-tab-active: 213 94% 48%;
     
     /* Dirty/Modified state */
-    --dirty: 38 95% 50%;
-    --dirty-foreground: 24 6% 16%;
+    --dirty: 38 92% 50%;
+    --dirty-foreground: 24 10% 10%;
   }
 
   .dark {
@@ -161,9 +168,22 @@
     @apply border-border;
   }
 
+  html {
+    /* Notion-style base line-height for optimal readability */
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    /* Notion's system font stack - native feel on every platform */
+    /* 
+     * Notion-style System Font Stack
+     * Priority: Native system fonts → Chinese fallbacks → Generic
+     * 
+     * macOS/iOS: San Francisco + PingFang SC
+     * Windows: Segoe UI + Microsoft YaHei  
+     * Android/Linux: Roboto + Noto Sans CJK
+     */
     font-family: 
       ui-sans-serif,
       -apple-system,
@@ -171,22 +191,33 @@
       "Segoe UI Variable Display",
       "Segoe UI",
       Roboto,
+      /* Chinese font fallbacks */
+      "PingFang SC",
+      "Microsoft YaHei",
+      "Noto Sans CJK SC",
+      "Source Han Sans SC",
+      "Hiragino Sans GB",
+      /* Generic fallbacks */
       Oxygen,
       Ubuntu,
       Cantarell,
-      "Fira Sans",
-      "Droid Sans",
       "Helvetica Neue",
-      sans-serif;
+      sans-serif,
+      /* Emoji support */
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.003em;
+    letter-spacing: -0.011em;
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
   }
   
-  /* Notion-style smooth scrollbar - almost invisible */
+  /* Notion-style smooth scrollbar - subtle and refined */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   
   ::-webkit-scrollbar-track {
@@ -194,18 +225,45 @@
   }
   
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--foreground) / 0.1);
+    background: hsl(var(--foreground) / 0.08);
     border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--foreground) / 0.18);
+    background: hsl(var(--foreground) / 0.15);
+    background-clip: content-box;
+  }
+  
+  /* Scrollbar only visible on hover (Notion-like) */
+  ::-webkit-scrollbar-thumb:not(:hover) {
+    background: hsl(var(--foreground) / 0.06);
+    background-clip: content-box;
   }
 
-  /* Refined text rendering */
+  /* Refined heading typography */
   h1, h2, h3, h4, h5, h6 {
     letter-spacing: -0.02em;
-    font-weight: 500;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  
+  h1 { font-size: 2em; font-weight: 700; }
+  h2 { font-size: 1.5em; }
+  h3 { font-size: 1.25em; }
+  h4 { font-size: 1em; }
+  
+  /* Paragraph spacing - Notion style */
+  p {
+    line-height: 1.6;
+  }
+  
+  /* Ensure tabular numbers in data contexts */
+  .tabular-nums, 
+  table, 
+  [data-tabular] {
+    font-feature-settings: "tnum" 1, "kern" 1;
   }
 }
 
@@ -270,37 +328,55 @@
 }
 
 @layer utilities {
-  /* Notion-like text styles */
+  /* Notion-like text styles with refined typography */
   .text-notion-title {
-    @apply text-foreground font-medium tracking-tight;
-    letter-spacing: -0.02em;
+    @apply text-foreground font-semibold;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
   }
   
   .text-notion-body {
     @apply text-foreground font-normal;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.011em;
+    line-height: 1.6;
   }
   
   .text-notion-muted {
     @apply text-muted-foreground text-sm font-normal;
+    line-height: 1.5;
   }
   
   .text-notion-caption {
     @apply text-muted-foreground text-xs font-normal;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
+    line-height: 1.4;
   }
   
-  /* Keyboard shortcut styling */
+  .text-notion-label {
+    @apply text-muted-foreground text-[11px] font-medium uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+  }
+  
+  /* Keyboard shortcut styling - refined */
   .kbd {
-    @apply inline-flex items-center justify-center px-1 py-0.5 text-[10px] font-medium 
-           bg-muted/80 text-muted-foreground rounded border border-border/50;
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    @apply inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-medium 
+           bg-muted text-muted-foreground rounded border border-border;
+    font-family: ui-monospace, "SF Mono", Monaco, "Cascadia Code", monospace;
+    line-height: 1;
   }
 
-  /* Table cell mono text */
+  /* Table cell mono text with tabular nums */
   .table-mono {
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+    font-family: ui-monospace, "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", monospace;
     font-size: 0.8125rem;
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum" 1;
+  }
+  
+  /* Data/number display with proper alignment */
+  .data-value {
+    font-feature-settings: "tnum" 1, "kern" 1;
     letter-spacing: -0.01em;
   }
 }

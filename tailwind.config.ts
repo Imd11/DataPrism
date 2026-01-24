@@ -21,23 +21,51 @@ export default {
           '"Segoe UI Variable Display"',
           '"Segoe UI"',
           'Roboto',
+          // Chinese font fallbacks
+          '"PingFang SC"',
+          '"Microsoft YaHei"',
+          '"Noto Sans CJK SC"',
+          '"Source Han Sans SC"',
+          '"Hiragino Sans GB"',
+          // Generic fallbacks
           'Oxygen',
           'Ubuntu',
           'Cantarell',
-          '"Fira Sans"',
-          '"Droid Sans"',
           '"Helvetica Neue"',
-          'sans-serif'
+          'sans-serif',
+          // Emoji support
+          '"Apple Color Emoji"',
+          '"Segoe UI Emoji"',
+          '"Segoe UI Symbol"'
         ],
         mono: [
           'ui-monospace',
+          '"SF Mono"',
           'SFMono-Regular',
-          'SF Mono',
           'Menlo',
+          'Monaco',
+          '"Cascadia Code"',
+          '"Roboto Mono"',
           'Consolas',
           '"Liberation Mono"',
+          '"Courier New"',
           'monospace'
         ],
+      },
+      // Enhanced spacing for Notion-like refinement
+      spacing: {
+        '0.5': '0.125rem',  // 2px
+        '1.5': '0.375rem',  // 6px  
+        '2.5': '0.625rem',  // 10px
+        '3.5': '0.875rem',  // 14px
+      },
+      fontSize: {
+        'xxs': ['0.625rem', { lineHeight: '1rem' }],     // 10px
+        'xs': ['0.75rem', { lineHeight: '1.125rem' }],   // 12px
+        'sm': ['0.8125rem', { lineHeight: '1.25rem' }],  // 13px - Notion's primary
+        'base': ['0.875rem', { lineHeight: '1.375rem' }], // 14px
+        'md': ['0.9375rem', { lineHeight: '1.5rem' }],   // 15px
+        'lg': ['1rem', { lineHeight: '1.5rem' }],        // 16px
       },
       colors: {
         border: "hsl(var(--border))",
