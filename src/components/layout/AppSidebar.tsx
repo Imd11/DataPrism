@@ -80,10 +80,10 @@ const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, childr
         {/* Project name */}
         <span className="flex-1 truncate font-medium">{project.name}</span>
         
-        {/* Tags */}
-        {project.tags.length > 0 && !isHovered && (
-          <span className="text-[10px] text-muted-foreground/50 truncate max-w-[60px]">
-            {project.tags[0]}
+        {/* Dataset count instead of tags */}
+        {!isHovered && (
+          <span className="text-[11px] text-muted-foreground/40 tabular-nums">
+            {/* Will show dataset count once we have per-project filtering */}
           </span>
         )}
         
@@ -190,11 +190,19 @@ const DatasetItem = ({ table, isActive, isOpen, onClick }: DatasetItemProps) => 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Table2 className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+      <Table2 className={cn(
+        "w-3.5 h-3.5 flex-shrink-0",
+        isOpen ? "text-foreground/70" : "text-muted-foreground/50"
+      )} />
       <span className="flex-1 truncate">{table.name}</span>
       
-      {table.dirty && <span className="w-1.5 h-1.5 rounded-full bg-dirty flex-shrink-0" />}
-      {isOpen && <span className="w-[5px] h-[5px] rounded-full bg-foreground/40 flex-shrink-0" title="Open in workspace" />}
+      {/* Only show dirty indicator (modified) - orange dot */}
+      {table.dirty && (
+        <span 
+          className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" 
+          title="Modified - unsaved changes"
+        />
+      )}
       
       {!isHovered && (
         <span className="text-[11px] text-muted-foreground/40 tabular-nums flex-shrink-0">
