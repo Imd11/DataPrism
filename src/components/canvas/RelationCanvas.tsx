@@ -279,21 +279,32 @@ export const RelationCanvas = () => {
   }, [openTables]);
   
   const initialEdges: Edge[] = useMemo(() => {
-    // Auto-detected relations - dashed lines with cardinality
+    // Auto-detected relations - animated dashed lines with cardinality only
     const relEdges = autoDetectedRelations.map((rel, idx) => ({
       id: `auto-rel-${idx}`,
       source: rel.source,
       target: rel.target,
-      label: `${rel.field} (${rel.cardinality})`,
+      label: rel.cardinality.toUpperCase(),
       type: 'smoothstep',
-      markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(var(--primary))' },
+      animated: true,
       style: { 
         stroke: 'hsl(var(--primary))', 
-        strokeWidth: 2,
-        strokeDasharray: '6,4', // Dashed line
+        strokeWidth: 1.5,
+        opacity: 0.7,
       },
-      labelStyle: { fontSize: 10, fill: 'hsl(var(--primary))', fontWeight: 500 },
-      labelBgStyle: { fill: 'hsl(var(--background))', fillOpacity: 0.9 },
+      labelStyle: { 
+        fontSize: 11, 
+        fill: 'hsl(var(--primary))', 
+        fontWeight: 600,
+        letterSpacing: '0.5px',
+      },
+      labelBgStyle: { 
+        fill: 'hsl(var(--background))', 
+        fillOpacity: 0.95,
+        rx: 4,
+        ry: 4,
+      },
+      labelBgPadding: [6, 4] as [number, number],
     }));
     
     // Lineage edges - orange animated lines for derived tables
@@ -303,8 +314,7 @@ export const RelationCanvas = () => {
       target: lin.derivedTableId,
       type: 'smoothstep',
       animated: true,
-      style: { stroke: 'hsl(38, 92%, 50%)', strokeDasharray: '5,5', strokeWidth: 2 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(38, 92%, 50%)' },
+      style: { stroke: 'hsl(38, 92%, 50%)', strokeWidth: 1.5, opacity: 0.7 },
     }));
     
     return [...relEdges, ...linEdges];
