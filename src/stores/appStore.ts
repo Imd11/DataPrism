@@ -77,8 +77,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   
   // Tables
   tables: mockTables,
-  openTableIds: [mockTables[0]?.id, mockTables[1]?.id].filter(Boolean) as string[],
-  activeTableId: mockTables[0]?.id || null,
+  openTableIds: ['table-customers', 'table-orders', 'table-products'],
+  activeTableId: 'table-customers',
   
   openTable: (tableId) => {
     const { openTableIds } = get();
