@@ -17,12 +17,18 @@ export interface DataFile {
   projectId: string;
 }
 
-export type FieldType = 'string' | 'number' | 'date' | 'boolean';
+export type FieldType = 'string' | 'number' | 'date' | 'boolean' | 'uuid' | 'int4' | 'int8' | 'float8' | 'text' | 'varchar' | 'timestamp' | 'timestamptz' | 'jsonb';
 
 export interface Field {
   name: string;
   type: FieldType;
   nullable: boolean;
+  isPrimaryKey?: boolean;
+  isUnique?: boolean;
+  isIdentity?: boolean;
+  isForeignKey?: boolean;
+  refTable?: string;
+  refField?: string;
   missingCount?: number;
   missingRate?: number;
 }
