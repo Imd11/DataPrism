@@ -238,32 +238,45 @@ const detectTableRelations = (tables: { id: string; fields: Field[] }[]): {
 };
 
 export const RelationCanvas = () => {
-  const { tables, lineages, selectedNodeId, setSelectedNode, setActiveTable, openTable } = useAppStore();
+  const { tables, openTableIds, lineages, selectedNodeId, setSelectedNode, setActiveTable, openTable } = useAppStore();
   
-  // Auto-detect relations based on shared fields
-  const autoDetectedRelations = useMemo(() => detectTableRelations(tables), [tables]);
+  // Only show tables that are currently open in the workspace
+  const openTables = useMemo(() => 
+    tables.filter(table => openTableIds.includes(table.id)), 
+    [tables, openTableIds]
+  );
+  
+  // Auto-detect relations based on shared fields (only for open tables)
+  const autoDetectedRelations = useMemo(() => detectTableRelations(openTables), [openTables]);
   
   const initialNodes: Node[] = useMemo(() => {
-    const positions: Record<string, { x: number; y: number }> = {
-      'table-companies': { x: 50, y: 50 },
-      'table-financials': { x: 400, y: 50 },
-      'table-customers': { x: 50, y: 380 },
-      'table-orders': { x: 400, y: 380 },
-      'table-panel': { x: 750, y: 200 },
-    };
+    // Dynamic positioning based on number of open tables
+    const cols = Math.ceil(Math.sqrt(openTables.length));
+    const nodeWidth = 300;
+    const nodeHeight = 280;
+    const gapX = 100;
+    const gapY = 80;
     
-    return tables.map(table => ({
-      id: table.id,
-      type: 'tableNode',
-      position: positions[table.id] || { x: Math.random() * 400, y: Math.random() * 300 },
-      data: {
-        label: table.name,
-        fields: table.fields,
-        rowCount: table.rowCount,
-        isDerived: table.sourceType === 'derived',
-      },
-    }));
-  }, [tables]);
+    return openTables.map((table, idx) => {
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      
+      return {
+        id: table.id,
+        type: 'tableNode',
+        position: { 
+          x: 50 + col * (nodeWidth + gapX), 
+          y: 50 + row * (nodeHeight + gapY) 
+        },
+        data: {
+          label: table.name,
+          fields: table.fields,
+          rowCount: table.rowCount,
+          isDerived: table.sourceType === 'derived',
+        },
+      };
+    });
+  }, [openTables]);
   
   const initialEdges: Edge[] = useMemo(() => {
     // Auto-detected relations - dashed lines with cardinality
