@@ -11,7 +11,8 @@ import {
   Trash2,
   Pencil,
   Upload,
-  ExternalLink
+  ExternalLink,
+  Table2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
@@ -36,14 +37,17 @@ const SidebarSection = ({ title, icon, children, defaultOpen = true }: SidebarSe
   const [isOpen, setIsOpen] = useState(defaultOpen);
   
   return (
-    <div className="mb-1">
+    <div className="mb-0.5">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-hover rounded-md transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground rounded-sm transition-colors duration-75"
       >
-        {icon}
-        <span className="flex-1 text-left">{title}</span>
-        {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+        <span className="text-muted-foreground/60">{icon}</span>
+        <span className="flex-1 text-left tracking-tight">{title}</span>
+        <ChevronDown className={cn(
+          "w-3.5 h-3.5 text-muted-foreground/50 transition-transform duration-150",
+          isOpen && "rotate-180"
+        )} />
       </button>
       <AnimatePresence initial={false}>
         {isOpen && (
@@ -51,7 +55,7 @@ const SidebarSection = ({ title, icon, children, defaultOpen = true }: SidebarSe
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
             className="overflow-hidden"
           >
             {children}
@@ -80,54 +84,55 @@ const SidebarItem = ({ label, icon, active, isOpen, dirty, meta, onClick, onOpen
   return (
     <div 
       className={cn(
-        "group flex items-center gap-2 px-3 py-1.5 mx-1 rounded-md text-sm cursor-pointer transition-colors",
+        "group flex items-center gap-2 px-3 py-[6px] mx-1 rounded-sm text-[13px] cursor-pointer transition-colors duration-75",
         active 
-          ? "bg-sidebar-accent text-sidebar-accent-foreground" 
-          : "text-sidebar-foreground hover:bg-sidebar-hover"
+          ? "bg-foreground/[0.06] text-foreground" 
+          : "text-foreground/70 hover:bg-foreground/[0.04] hover:text-foreground"
       )}
       onClick={onClick}
       onMouseEnter={() => setShowMenu(true)}
       onMouseLeave={() => setShowMenu(false)}
     >
-      {icon && <span className="text-sidebar-foreground/60">{icon}</span>}
+      {icon && <span className="text-muted-foreground/50">{icon}</span>}
       <span className="flex-1 truncate">{label}</span>
       {dirty && <span className="w-1.5 h-1.5 rounded-full bg-dirty" />}
-      {isOpen && <span className="w-1.5 h-1.5 rounded-full bg-primary" title="Open in workspace" />}
-      {meta && <span className="text-xs text-sidebar-foreground/40">{meta}</span>}
+      {isOpen && <span className="w-[5px] h-[5px] rounded-full bg-primary" title="Open in workspace" />}
+      {meta && <span className="text-[11px] text-muted-foreground/50 tabular-nums">{meta}</span>}
       
       {onMenuAction && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button 
               className={cn(
-                "p-0.5 rounded hover:bg-sidebar-accent transition-opacity",
+                "p-0.5 rounded-sm transition-opacity duration-75",
+                "hover:bg-foreground/[0.08]",
                 showMenu ? "opacity-100" : "opacity-0 group-hover:opacity-100"
               )}
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreHorizontal className="w-3.5 h-3.5" />
+              <MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-44 notion-popover-shadow">
             {onOpen && (
               <>
-                <DropdownMenuItem onClick={() => onOpen()}>
-                  <ExternalLink className="w-3.5 h-3.5 mr-2" />
-                  Open
+                <DropdownMenuItem onClick={() => onOpen()} className="gap-2.5 py-2">
+                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  <span>Open</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
             )}
-            <DropdownMenuItem onClick={() => onMenuAction('rename')}>
-              <Pencil className="w-3.5 h-3.5 mr-2" />
-              Rename
+            <DropdownMenuItem onClick={() => onMenuAction('rename')} className="gap-2.5 py-2">
+              <Pencil className="w-4 h-4 text-muted-foreground" />
+              <span>Rename</span>
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => onMenuAction('delete')}
-              className="text-destructive focus:text-destructive"
+              className="gap-2.5 py-2 text-destructive focus:text-destructive focus:bg-destructive/10"
             >
-              <Trash2 className="w-3.5 h-3.5 mr-2" />
-              Delete
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -155,23 +160,23 @@ export const AppSidebar = () => {
     return (
       <motion.div 
         initial={{ width: 0 }}
-        animate={{ width: 48 }}
+        animate={{ width: 44 }}
         className="h-full bg-sidebar border-r border-sidebar-border flex flex-col items-center py-3"
       >
         <Button
           variant="ghost"
           size="icon"
-          className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-hover"
+          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
           onClick={() => setSidebarCollapsed(false)}
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
         
-        <div className="flex flex-col items-center gap-1 mt-4">
+        <div className="flex flex-col items-center gap-0.5 mt-4">
           <Button
             variant="ghost"
             size="icon"
-            className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-hover"
+            className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
             title="Projects"
           >
             <FolderOpen className="w-4 h-4" />
@@ -179,10 +184,10 @@ export const AppSidebar = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="w-8 h-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-hover"
+            className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
             title="Datasets"
           >
-            <Database className="w-4 h-4" />
+            <Table2 className="w-4 h-4" />
           </Button>
         </div>
       </motion.div>
@@ -192,24 +197,24 @@ export const AppSidebar = () => {
   return (
     <motion.div 
       initial={{ width: 0 }}
-      animate={{ width: 260 }}
+      animate={{ width: 240 }}
       className="h-full bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-sidebar-border">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground text-xs font-bold">L</span>
+          <div className="w-5 h-5 rounded bg-foreground/90 flex items-center justify-center">
+            <span className="text-background text-[10px] font-semibold">L</span>
           </div>
-          <span className="font-semibold text-sm text-sidebar-foreground">LinkData</span>
+          <span className="font-medium text-[13px] text-foreground tracking-tight">LinkData</span>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-hover"
+          className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
           onClick={() => setSidebarCollapsed(true)}
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-3.5 h-3.5" />
         </Button>
       </div>
       
@@ -220,7 +225,7 @@ export const AppSidebar = () => {
           title="Projects" 
           icon={<FolderOpen className="w-4 h-4" />}
         >
-          <div className="ml-2">
+          <div className="ml-1.5">
             {projects.map(project => (
               <SidebarItem
                 key={project.id}
@@ -230,7 +235,7 @@ export const AppSidebar = () => {
                 onMenuAction={(action) => console.log(action, project.id)}
               />
             ))}
-            <button className="flex items-center gap-2 px-3 py-1.5 mx-1 text-sm text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-hover rounded-md w-full transition-colors">
+            <button className="flex items-center gap-2 px-3 py-[6px] mx-1 text-[13px] text-muted-foreground/60 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-full transition-colors duration-75">
               <Plus className="w-3.5 h-3.5" />
               <span>New Project</span>
             </button>
@@ -240,24 +245,24 @@ export const AppSidebar = () => {
         {/* Datasets Section */}
         <SidebarSection 
           title="Datasets" 
-          icon={<Database className="w-4 h-4" />}
+          icon={<Table2 className="w-4 h-4" />}
         >
-          <div className="ml-2">
+          <div className="ml-1.5">
             {tables.map(table => (
               <SidebarItem
                 key={table.id}
                 label={table.name}
-                icon={<Database className="w-3.5 h-3.5" />}
+                icon={<Table2 className="w-3.5 h-3.5" />}
                 active={table.id === activeTableId}
                 isOpen={openTableIds.includes(table.id)}
                 dirty={table.dirty}
-                meta={`${table.rowCount.toLocaleString()} rows`}
+                meta={`${table.rowCount.toLocaleString()}`}
                 onClick={() => openTable(table.id)}
                 onOpen={() => openTable(table.id)}
                 onMenuAction={(action) => console.log(action, table.id)}
               />
             ))}
-            <button className="flex items-center gap-2 px-3 py-1.5 mx-1 text-sm text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-hover rounded-md w-full transition-colors">
+            <button className="flex items-center gap-2 px-3 py-[6px] mx-1 text-[13px] text-muted-foreground/60 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-full transition-colors duration-75">
               <Upload className="w-3.5 h-3.5" />
               <span>Import Dataset</span>
             </button>
@@ -267,23 +272,25 @@ export const AppSidebar = () => {
       
       {/* Footer - Current Project Info */}
       {currentProject && (
-        <div className="px-3 py-2.5 border-t border-sidebar-border">
-          <div className="text-xs text-sidebar-foreground/50">
+        <div className="px-3 py-2 border-t border-sidebar-border">
+          <div className="text-[11px] text-muted-foreground/50 uppercase tracking-wide">
             Current Project
           </div>
-          <div className="text-sm font-medium text-sidebar-foreground truncate">
+          <div className="text-[13px] font-medium text-foreground truncate mt-0.5">
             {currentProject.name}
           </div>
-          <div className="flex gap-1 mt-1">
-            {currentProject.tags.map(tag => (
-              <span 
-                key={tag}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-foreground/70"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {currentProject.tags.length > 0 && (
+            <div className="flex gap-1 mt-1.5 flex-wrap">
+              {currentProject.tags.map(tag => (
+                <span 
+                  key={tag}
+                  className="text-[10px] px-1.5 py-0.5 rounded-sm bg-foreground/[0.06] text-muted-foreground"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </motion.div>

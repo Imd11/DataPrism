@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, Table2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { DataGrid } from './DataGrid';
@@ -23,7 +23,6 @@ export const TableWorkspace = () => {
   const handleColumnAction = (action: string, columns: string[]) => {
     if (!activeTable) return;
     
-    // Map actions to operation types
     const actionMap: Record<string, { type: string; tab: 'summary' | 'quality' | 'history' }> = {
       'summary': { type: 'summary', tab: 'summary' },
       'filter': { type: 'filter', tab: 'history' },
@@ -54,9 +53,12 @@ export const TableWorkspace = () => {
     return (
       <div className="h-full flex items-center justify-center bg-background">
         <div className="text-center">
-          <p className="text-muted-foreground text-sm">No tables open</p>
-          <p className="text-muted-foreground/60 text-xs mt-1">
-            Click a table in the sidebar to open it
+          <div className="w-10 h-10 rounded-full bg-foreground/[0.04] flex items-center justify-center mx-auto mb-3">
+            <Table2 className="w-5 h-5 text-muted-foreground/50" />
+          </div>
+          <p className="text-foreground/70 text-[13px] font-medium">No tables open</p>
+          <p className="text-muted-foreground/60 text-[12px] mt-1">
+            Click a dataset in the sidebar to open it
           </p>
         </div>
       </div>
@@ -66,7 +68,7 @@ export const TableWorkspace = () => {
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Tab Bar */}
-      <div className="h-9 flex items-center border-b border-border bg-muted/30 overflow-x-auto">
+      <div className="h-9 flex items-center border-b border-border bg-muted/20 overflow-x-auto">
         <AnimatePresence mode="popLayout">
           {openTables.map(table => (
             <motion.div
@@ -74,14 +76,14 @@ export const TableWorkspace = () => {
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: 'auto' }}
               exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.12, ease: 'easeOut' }}
             >
               <button
                 className={cn(
-                  "group h-9 px-3 flex items-center gap-2 border-r border-border text-sm transition-colors",
+                  "group h-9 px-3 flex items-center gap-2 border-r border-border text-[13px] transition-colors duration-75",
                   table.id === activeTableId
                     ? "bg-background text-foreground"
-                    : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                 )}
                 onClick={() => setActiveTable(table.id)}
               >
@@ -90,18 +92,18 @@ export const TableWorkspace = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-dirty" title="Modified" />
                 )}
                 {table.sourceType === 'derived' && (
-                  <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary font-medium">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">
                     derived
                   </span>
                 )}
                 <button
-                  className="p-0.5 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-0.5 rounded-sm hover:bg-foreground/[0.08] opacity-0 group-hover:opacity-100 transition-opacity duration-75"
                   onClick={(e) => {
                     e.stopPropagation();
                     closeTable(table.id);
                   }}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3 h-3 text-muted-foreground" />
                 </button>
               </button>
             </motion.div>
@@ -122,9 +124,9 @@ export const TableWorkspace = () => {
       
       {/* Status Bar */}
       {activeTable && (
-        <div className="h-6 px-3 flex items-center gap-4 border-t border-border bg-muted/30 text-xs text-muted-foreground">
-          <span>{activeTable.rowCount.toLocaleString()} rows</span>
-          <span>{activeTable.fields.length} columns</span>
+        <div className="h-6 px-3 flex items-center gap-4 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">
+          <span className="tabular-nums">{activeTable.rowCount.toLocaleString()} rows</span>
+          <span className="tabular-nums">{activeTable.fields.length} columns</span>
           {activeTable.dirty && (
             <span className="text-dirty font-medium">Modified</span>
           )}
