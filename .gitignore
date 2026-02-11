@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Data Weaver backend local data
+.data-weaver/
+backend/**/__pycache__/
+.venv/
+.backend.log
+.backend.pid

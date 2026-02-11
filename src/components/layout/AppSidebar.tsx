@@ -19,8 +19,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { NewProjectDialog } from '@/components/projects/NewProjectDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,11 +40,13 @@ interface ProjectItemProps {
   isExpanded: boolean;
   onToggle: () => void;
   onSelect: () => void;
+  onImport: (projectId: string, file: File) => void;
   children: React.ReactNode;
 }
 
-const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, children }: ProjectItemProps) => {
+const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, onImport, children }: ProjectItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   return (
     <div className="mb-1">
@@ -102,45 +105,61 @@ const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, childr
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52 notion-popover-shadow">
-            <DropdownMenuItem className="gap-2.5 py-2">
+            <DropdownMenuItem
+              className="gap-2.5 py-2"
+              onSelect={(e) => {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }}
+            >
               <Upload className="w-4 h-4 text-muted-foreground" />
-              <span>Import Dataset</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2.5 py-2">
-              <FileSpreadsheet className="w-4 h-4 text-muted-foreground" />
-              <span>Import from Excel/CSV</span>
+              <span>Import data…</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2.5 py-2">
+            <DropdownMenuItem className="gap-2.5 py-2" disabled>
               <Download className="w-4 h-4 text-muted-foreground" />
               <span>Export Project</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2.5 py-2">
+            <DropdownMenuItem className="gap-2.5 py-2" disabled>
               <Copy className="w-4 h-4 text-muted-foreground" />
               <span>Duplicate Project</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2.5 py-2">
+            <DropdownMenuItem className="gap-2.5 py-2" disabled>
               <Share2 className="w-4 h-4 text-muted-foreground" />
               <span>Share</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2.5 py-2">
+            <DropdownMenuItem className="gap-2.5 py-2" disabled>
               <Settings className="w-4 h-4 text-muted-foreground" />
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2.5 py-2">
+            <DropdownMenuItem className="gap-2.5 py-2" disabled>
               <Pencil className="w-4 h-4 text-muted-foreground" />
               <span>Rename</span>
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="gap-2.5 py-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+              disabled
             >
               <Trash2 className="w-4 h-4" />
               <span>Delete Project</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept=".csv,.xlsx,.xls"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            onImport(project.id, f);
+            e.currentTarget.value = "";
+          }}
+        />
       </div>
       
       {/* Datasets (children) */}
@@ -254,15 +273,18 @@ export const AppSidebar = () => {
     projects,
     currentProjectId,
     setCurrentProject,
+    createProject,
     tables,
     openTable,
     activeTableId,
-    openTableIds
+    openTableIds,
+    importDatasetToProject,
   } = useAppStore();
   
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(currentProjectId ? [currentProjectId] : [])
   );
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
   
   const toggleProject = (projectId: string) => {
     setExpandedProjects(prev => {
@@ -277,7 +299,7 @@ export const AppSidebar = () => {
   };
   
   const handleSelectProject = (projectId: string) => {
-    setCurrentProject(projectId);
+    void setCurrentProject(projectId);
     // Auto-expand when selecting
     setExpandedProjects(prev => new Set(prev).add(projectId));
   };
@@ -312,7 +334,7 @@ export const AppSidebar = () => {
               )}
               title={project.name}
               onClick={() => {
-                setCurrentProject(project.id);
+                void setCurrentProject(project.id);
                 setSidebarCollapsed(false);
               }}
             >
@@ -359,28 +381,47 @@ export const AppSidebar = () => {
             isExpanded={expandedProjects.has(project.id)}
             onToggle={() => toggleProject(project.id)}
             onSelect={() => handleSelectProject(project.id)}
+            onImport={(projectId, file) => void importDatasetToProject(projectId, file)}
           >
             {/* Datasets under this project */}
-            {tables.map(table => (
+            {project.id === currentProjectId && tables.map(table => (
               <DatasetItem
                 key={table.id}
                 table={table}
                 isActive={table.id === activeTableId}
                 isOpen={openTableIds.includes(table.id)}
-                onClick={() => openTable(table.id)}
+                onClick={() => void openTable(table.id)}
               />
             ))}
             
-            {/* Import button */}
-            <button className="flex items-center gap-2 px-2 py-[5px] text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-full transition-colors duration-75 mt-0.5">
-              <Plus className="w-3 h-3" />
-              <span>Add Dataset</span>
-            </button>
+            {/* Quick import for current project */}
+            {project.id === currentProjectId && (
+              <label className="flex items-center gap-2 px-2 py-[5px] text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-full transition-colors duration-75 mt-0.5 cursor-pointer">
+                <Plus className="w-3 h-3" />
+                <span>Import data…</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    void importDatasetToProject(project.id, f);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+            )}
           </ProjectItem>
         ))}
         
         {/* New Project button */}
-        <button className="flex items-center gap-2 px-3 py-[6px] mx-1 text-[13px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-[calc(100%-8px)] transition-colors duration-75 mt-1">
+        <button
+          className="flex items-center gap-2 px-3 py-[6px] mx-1 text-[13px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-[calc(100%-8px)] transition-colors duration-75 mt-1"
+          onClick={() => {
+            setNewProjectOpen(true);
+          }}
+        >
           <FolderPlus className="w-3.5 h-3.5" />
           <span>New Project</span>
         </button>
@@ -390,6 +431,8 @@ export const AppSidebar = () => {
       <div className="px-3 py-2 border-t border-sidebar-border text-[11px] text-muted-foreground/40">
         {tables.length} datasets · {projects.length} projects
       </div>
+      
+      <NewProjectDialog open={newProjectOpen} onOpenChange={setNewProjectOpen} />
     </motion.div>
   );
 };

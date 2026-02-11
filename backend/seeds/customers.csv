@@ -1,0 +1,13 @@
+customer_id,first_name,last_name,email,phone,city,country,created_at
+1,Ava,Chen,ava.chen@example.com,+1-212-555-0101,New York,USA,2024-01-05T10:12:00Z
+2,Liam,Wang,liam.wang@example.com,+1-415-555-0102,San Francisco,USA,2024-01-08T09:30:00Z
+3,Noah,Li,noah.li@example.com,+1-312-555-0103,Chicago,USA,2024-01-10T14:22:00Z
+4,Emma,Zhang,emma.zhang@example.com,+44-20-5550-0104,London,UK,2024-01-11T08:55:00Z
+5,Olivia,Liu,olivia.liu@example.com,+49-30-5550-0105,Berlin,Germany,2024-01-12T16:40:00Z
+6,William,Garcia,william.garcia@example.com,+33-1-5550-0106,Paris,France,2024-01-15T11:05:00Z
+7,Sophia,Martinez,sophia.martinez@example.com,+1-305-555-0107,Miami,USA,2024-01-18T19:10:00Z
+8,James,Brown,james.brown@example.com,+61-2-5550-0108,Sydney,Australia,2024-01-20T07:45:00Z
+9,Isabella,Davis,isabella.davis@example.com,+81-3-5550-0109,Tokyo,Japan,2024-01-22T13:15:00Z
+10,Benjamin,Miller,,+1-206-555-0110,Seattle,USA,2024-01-25T09:05:00Z
+11,Mia,Wilson,mia.wilson@example.com,,Austin,USA,2024-01-27T17:25:00Z
+12,Ethan,Moore,ethan.moore@example.com,+1-617-555-0112,Boston,USA,2024-01-28T12:00:00Z

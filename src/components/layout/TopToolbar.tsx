@@ -30,7 +30,11 @@ export const TopToolbar = () => {
     currentProjectId,
     setCurrentProject,
     operationHistory,
-    undoLastOperation
+    undoLastOperation,
+    exportActiveTable,
+    importDataset,
+    loading,
+    error,
   } = useAppStore();
   
   const [isDark, setIsDark] = useState(false);
@@ -67,8 +71,21 @@ export const TopToolbar = () => {
           size="sm" 
           className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
         >
-          <Upload className="w-3.5 h-3.5" />
-          <span>Import</span>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <Upload className="w-3.5 h-3.5" />
+            <span>Import</span>
+            <input
+              type="file"
+              className="hidden"
+              accept=".csv,.xlsx,.xls"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                void importDataset(f);
+                e.currentTarget.value = "";
+              }}
+            />
+          </label>
         </Button>
         
         <DropdownMenu>
@@ -84,10 +101,10 @@ export const TopToolbar = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-52 notion-popover-shadow">
-            <DropdownMenuItem className="py-2">
+            <DropdownMenuItem className="py-2" onClick={() => void exportActiveTable('dta')}>
               Export as .dta (Stata)
             </DropdownMenuItem>
-            <DropdownMenuItem className="py-2">
+            <DropdownMenuItem className="py-2" onClick={() => void exportActiveTable('csv')}>
               Export as CSV
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -107,7 +124,7 @@ export const TopToolbar = () => {
             canUndo ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30"
           )}
           disabled={!canUndo}
-          onClick={undoLastOperation}
+          onClick={() => void undoLastOperation()}
         >
           <Undo2 className="w-3.5 h-3.5" />
         </Button>
@@ -138,7 +155,7 @@ export const TopToolbar = () => {
             {projects.map(project => (
               <DropdownMenuItem 
                 key={project.id}
-                onClick={() => setCurrentProject(project.id)}
+                onClick={() => void setCurrentProject(project.id)}
                 className={cn(
                   "py-2",
                   project.id === currentProjectId && "bg-foreground/[0.04]"
@@ -153,6 +170,14 @@ export const TopToolbar = () => {
       
       {/* Right Section */}
       <div className="flex items-center gap-0.5">
+        {loading && (
+          <span className="text-[12px] text-muted-foreground px-2">Loading…</span>
+        )}
+        {error && (
+          <span className="text-[12px] text-destructive max-w-[320px] truncate px-2" title={error}>
+            {error}
+          </span>
+        )}
         <Button 
           variant="ghost" 
           size="icon" 

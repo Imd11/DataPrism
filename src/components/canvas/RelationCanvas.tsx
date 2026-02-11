@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -198,78 +198,37 @@ const CanvasLegend = () => {
   );
 };
 
-// Detect shared fields between tables and determine cardinality
-const detectTableRelations = (tables: { id: string; fields: Field[] }[]): {
-  source: string;
-  target: string;
-  field: string;
-  cardinality: '1:1' | '1:m' | 'm:1';
-}[] => {
-  const relations: { source: string; target: string; field: string; cardinality: '1:1' | '1:m' | 'm:1' }[] = [];
-  
-  for (let i = 0; i < tables.length; i++) {
-    for (let j = i + 1; j < tables.length; j++) {
-      const tableA = tables[i];
-      const tableB = tables[j];
-      
-      // Find shared field names
-      const fieldsA = tableA.fields;
-      const fieldsB = tableB.fields;
-      
-      for (const fieldA of fieldsA) {
-        const fieldB = fieldsB.find(f => f.name === fieldA.name);
-        if (fieldB) {
-          // Shared field found - determine cardinality
-          const isUniqueInA = fieldA.isPrimaryKey || fieldA.isUnique || fieldA.isIdentity;
-          const isUniqueInB = fieldB.isPrimaryKey || fieldB.isUnique || fieldB.isIdentity;
-          
-          let cardinality: '1:1' | '1:m' | 'm:1';
-          if (isUniqueInA && isUniqueInB) {
-            cardinality = '1:1';
-          } else if (isUniqueInA && !isUniqueInB) {
-            cardinality = '1:m'; // A is the "1" side
-          } else if (!isUniqueInA && isUniqueInB) {
-            cardinality = 'm:1'; // B is the "1" side
-          } else {
-            // Both non-unique - still can connect, default to m:1
-            cardinality = 'm:1';
-          }
-          
-          relations.push({
-            source: tableA.id,
-            target: tableB.id,
-            field: fieldA.name,
-            cardinality,
-          });
-        }
-      }
-    }
-  }
-  
-  return relations;
+const displayCardinality = (c: '1:1' | '1:m' | 'm:1') => {
+  // Backend stores cardinality in FK → PK direction.
+  // UI displays it as PK → FK (more intuitive: "products 1:m order_items").
+  if (c === 'm:1') return '1:M';
+  if (c === '1:m') return 'M:1';
+  return '1:1';
 };
 
 export const RelationCanvas = () => {
-  const { tables, openTableIds, lineages, selectedNodeId, setSelectedNode, setActiveTable, openTable } = useAppStore();
+  const {
+    tables,
+    relations,
+    lineages,
+    setSelectedRelation,
+    setSelectedNode,
+    setActiveTable,
+    openTable,
+  } = useAppStore();
   
-  // Only show tables that are currently open in the workspace
-  const openTables = useMemo(() => 
-    tables.filter(table => openTableIds.includes(table.id)), 
-    [tables, openTableIds]
-  );
-  
-  // Auto-detect relations based on shared fields (only for open tables)
-  const autoDetectedRelations = useMemo(() => detectTableRelations(openTables), [openTables]);
+  // Show all tables in current project (loaded from backend canvas API).
+  const canvasTables = useMemo(() => tables, [tables]);
   
   const initialNodes: Node[] = useMemo(() => {
-    // Dynamic positioning based on number of open tables
-    const cols = Math.ceil(Math.sqrt(openTables.length));
+    // Dynamic positioning based on number of tables
+    const cols = Math.max(1, Math.ceil(Math.sqrt(canvasTables.length)));
     const nodeWidth = 300;
     const nodeHeight = 280;
     const gapX = 100;
     const gapY = 80;
     
-    return openTables.map((table, idx) => {
+    return canvasTables.map((table, idx) => {
       const col = idx % cols;
       const row = Math.floor(idx / cols);
       
@@ -288,58 +247,91 @@ export const RelationCanvas = () => {
         },
       };
     });
-  }, [openTables]);
+  }, [canvasTables]);
   
   const initialEdges: Edge[] = useMemo(() => {
-    // Auto-detected relations - animated lines connecting specific fields
-    const relEdges = autoDetectedRelations.map((rel, idx) => ({
-      id: `auto-rel-${idx}`,
-      source: rel.source,
-      target: rel.target,
-      sourceHandle: `${rel.field}-right`, // Connect from source field's right handle
-      targetHandle: `${rel.field}-left`,  // Connect to target field's left handle
-      label: rel.cardinality.toUpperCase(),
-      type: 'smoothstep',
-      animated: true,
-      style: { 
-        stroke: 'hsl(var(--foreground) / 0.4)', 
-        strokeWidth: 1.5,
-        opacity: 0.7,
-      },
-      labelStyle: { 
-        fontSize: 11, 
-        fill: 'hsl(var(--foreground))', 
-        fontWeight: 600,
-        letterSpacing: '0.5px',
-      },
-      labelBgStyle: { 
-        fill: 'hsl(var(--background))', 
-        fillOpacity: 0.95,
-        rx: 4,
-        ry: 4,
-      },
-      labelBgPadding: [6, 4] as [number, number],
-    }));
+    const ids = new Set(canvasTables.map((t) => t.id));
+    
+    // Backend relations (PK/FK) - connect PK field to FK field.
+    const relEdges: Edge[] = relations
+      .filter((r) => ids.has(r.fkTableId) && ids.has(r.pkTableId))
+      .map((rel) => {
+        const fkField = rel.fkFields[0];
+        const pkField = rel.pkFields[0];
+        return {
+          id: rel.id,
+          source: rel.pkTableId,
+          target: rel.fkTableId,
+          sourceHandle: pkField ? `${pkField}-right` : undefined,
+          targetHandle: fkField ? `${fkField}-left` : undefined,
+          label: displayCardinality(rel.cardinality),
+          type: 'smoothstep',
+          animated: true,
+          markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
+          style: { 
+            stroke: 'hsl(var(--foreground) / 0.4)', 
+            strokeWidth: 1.5,
+            opacity: 0.75,
+          },
+          labelStyle: { 
+            fontSize: 11, 
+            fill: 'hsl(var(--foreground))', 
+            fontWeight: 600,
+            letterSpacing: '0.5px',
+          },
+          labelBgStyle: { 
+            fill: 'hsl(var(--background))', 
+            fillOpacity: 0.95,
+            rx: 4,
+            ry: 4,
+          },
+          labelBgPadding: [6, 4] as [number, number],
+        };
+      });
     
     // Lineage edges - orange animated lines for derived tables
-    const linEdges = lineages.map(lin => ({
-      id: lin.id,
-      source: lin.sourceTableIds[0],
-      target: lin.derivedTableId,
-      type: 'smoothstep',
-      animated: true,
-      style: { stroke: 'hsl(38, 92%, 50%)', strokeWidth: 1.5, opacity: 0.7 },
-    }));
+    const linEdges: Edge[] = lineages
+      .flatMap((lin) =>
+        lin.sourceTableIds
+          .filter((srcId) => ids.has(srcId) && ids.has(lin.derivedTableId))
+          .map((srcId) => ({
+            id: `${lin.id}:${srcId}`,
+            source: srcId,
+            target: lin.derivedTableId,
+            type: 'smoothstep',
+            animated: true,
+            style: {
+              stroke: 'hsl(38, 92%, 50%)',
+              strokeWidth: 1.5,
+              opacity: 0.7,
+              strokeDasharray: '6 4',
+            },
+          })),
+      );
     
     return [...relEdges, ...linEdges];
-  }, [autoDetectedRelations, lineages]);
+  }, [relations, lineages, canvasTables]);
   
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Keep nodes/edges in sync when tables/relations change (e.g. import).
+  useEffect(() => {
+    setNodes((prev) => {
+      const prevById = new Map(prev.map((n) => [n.id, n]));
+      return initialNodes.map((n) => {
+        const existing = prevById.get(n.id);
+        return existing
+          ? { ...n, position: existing.position, positionAbsolute: (existing as any).positionAbsolute }
+          : n;
+      });
+    });
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
   
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node.id);
-    openTable(node.id);
+    void openTable(node.id);
     setActiveTable(node.id);
   }, [setSelectedNode, openTable, setActiveTable]);
   
@@ -351,6 +343,12 @@ export const RelationCanvas = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
+        onEdgeClick={(event, edge) => {
+          // Only backend relations have report endpoints.
+          if (edge.id.startsWith('rel-')) {
+            setSelectedRelation(edge.id);
+          }
+        }}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}

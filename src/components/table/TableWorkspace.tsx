@@ -11,14 +11,18 @@ export const TableWorkspace = () => {
     activeTableId, 
     setActiveTable, 
     closeTable,
-    getTableData,
-    addOperation,
-    setActiveResultTab
+    tableData,
+    fetchTableRows,
+    cleanColumns,
+    setActiveResultTab,
+    error,
+    loading,
   } = useAppStore();
   
   const openTables = tables.filter(t => openTableIds.includes(t.id));
   const activeTable = tables.find(t => t.id === activeTableId);
-  const activeData = activeTableId ? getTableData(activeTableId) : [];
+  const activeDataState = activeTableId ? tableData[activeTableId] : undefined;
+  const activeData = activeDataState?.rows ?? [];
   
   const handleColumnAction = (action: string, columns: string[]) => {
     if (!activeTable) return;
@@ -38,14 +42,15 @@ export const TableWorkspace = () => {
     
     const mapping = actionMap[action];
     if (mapping) {
-      addOperation({
-        type: mapping.type as any,
-        tableId: activeTable.id,
-        tableName: activeTable.name,
-        params: { action, columns },
-        undoable: action !== 'summary',
-      });
       setActiveResultTab(mapping.tab);
+      
+      if (action === 'summary') {
+        // Summary is fetched by ResultsPanel on demand
+        return;
+      }
+      if (mapping.type === 'clean') {
+        void cleanColumns(activeTable.id, action, columns);
+      }
     }
   };
   
@@ -118,6 +123,10 @@ export const TableWorkspace = () => {
             data={activeData}
             fields={activeTable.fields}
             onColumnAction={handleColumnAction}
+            onSortChange={(sort) => {
+              if (!activeTableId) return;
+              void fetchTableRows(activeTableId, { offset: 0, sort });
+            }}
           />
         )}
       </div>
@@ -127,6 +136,12 @@ export const TableWorkspace = () => {
         <div className="h-6 px-3 flex items-center gap-4 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">
           <span className="tabular-nums">{activeTable.rowCount.toLocaleString()} rows</span>
           <span className="tabular-nums">{activeTable.fields.length} columns</span>
+          {activeDataState?.loading && (
+            <span className="text-foreground/60">Loading…</span>
+          )}
+          {activeDataState?.error && (
+            <span className="text-destructive">{activeDataState.error}</span>
+          )}
           {activeTable.dirty && (
             <span className="text-dirty font-medium">Modified</span>
           )}

@@ -1,0 +1,15 @@
+product_id,product_name,category_id,price,stock_quantity,supplier
+101,Wireless Headphones,1,89.99,120,GlobalTech
+102,Smart Watch,1,129.00,80,PrimeSupply
+103,Mechanical Keyboard,1,74.50,60,DirectSource
+104,Bluetooth Speaker,1,49.99,150,GlobalTech
+201,Cotton T-Shirt,2,19.99,500,ValueMart
+202,Denim Jeans,2,54.00,220,QualityFirst
+203,Running Shoes,2,79.00,140,PrimeSupply
+301,LED Desk Lamp,3,24.99,180,TopGoods
+302,Garden Hose,3,18.50,260,ValueMart
+303,Tool Set,3,39.95,90,QualityFirst
+401,Fiction Novel,4,14.99,320,
+402,Science Journal,4,9.50,200,BestDeal
+501,Organic Coffee,5,12.00,400,ValueMart
+502,Green Tea,5,8.75,350,TopGoods

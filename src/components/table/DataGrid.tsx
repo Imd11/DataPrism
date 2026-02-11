@@ -49,6 +49,7 @@ interface DataGridProps {
   fields: Field[];
   onCellClick?: (rowIndex: number, columnId: string) => void;
   onColumnAction?: (action: string, columns: string[]) => void;
+  onSortChange?: (sort: { field: string; direction: 'asc' | 'desc' }[]) => void;
 }
 
 const getTypeIcon = (type: Field['type']) => {
@@ -88,7 +89,7 @@ const ColumnResizeHandle = ({ header }: { header: Header<RowData, unknown> }) =>
   );
 };
 
-export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGridProps) => {
+export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChange }: DataGridProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set());
@@ -354,13 +355,25 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction }: DataGrid
       columnOrder,
       columnSizing,
     },
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sorting) : updater;
+      setSorting(next);
+      if (onSortChange) {
+        const mapped = next.map((s) => ({
+          field: String(s.id),
+          direction: s.desc ? 'desc' : 'asc',
+        }));
+        onSortChange(mapped);
+      }
+    },
     onColumnFiltersChange: setColumnFilters,
     onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    // Sorting/filtering should be done server-side (for large tables).
+    // UI still displays current state, and callers may re-query data.
+    manualSorting: true,
+    manualFiltering: true,
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
   });

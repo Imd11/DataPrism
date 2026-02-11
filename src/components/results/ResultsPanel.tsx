@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { Button } from '@/components/ui/button';
-import { generateMockSummary, generateMockQuality } from '@/data/mockData';
+import { useEffect } from 'react';
 
 const tabs = [
   { id: 'summary', label: 'Summary', icon: BarChart3 },
@@ -29,12 +29,28 @@ export const ResultsPanel = () => {
     setActiveResultTab, 
     tables, 
     activeTableId,
-    operationHistory 
+    operationHistory,
+    summaryByTableId,
+    qualityByTableId,
+    fetchSummary,
+    fetchQuality,
+    exportActiveTable,
+    undoLastOperation,
   } = useAppStore();
   
   const activeTable = tables.find(t => t.id === activeTableId);
-  const summary = activeTable ? generateMockSummary(activeTable) : null;
-  const quality = activeTable ? generateMockQuality(activeTable) : null;
+  const summary = activeTable ? summaryByTableId[activeTable.id] : undefined;
+  const quality = activeTable ? qualityByTableId[activeTable.id] : undefined;
+  
+  useEffect(() => {
+    if (!activeTable) return;
+    if (activeResultTab === 'summary' && !summary) {
+      void fetchSummary(activeTable.id);
+    }
+    if (activeResultTab === 'quality' && !quality) {
+      void fetchQuality(activeTable.id);
+    }
+  }, [activeResultTab, activeTable, summary, quality, fetchSummary, fetchQuality]);
   
   return (
     <div className="h-full flex flex-col bg-results-background">
@@ -59,6 +75,16 @@ export const ResultsPanel = () => {
       
       {/* Content */}
       <div className="flex-1 overflow-auto p-3">
+        {activeResultTab === 'summary' && !activeTable && (
+          <div className="h-full flex items-center justify-center text-muted-foreground text-[13px]">
+            Select a table to view summary
+          </div>
+        )}
+        {activeResultTab === 'summary' && activeTable && !summary && (
+          <div className="h-full flex items-center justify-center text-muted-foreground text-[13px]">
+            Loading summary…
+          </div>
+        )}
         {activeResultTab === 'summary' && summary && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -67,7 +93,13 @@ export const ResultsPanel = () => {
                 <Button variant="ghost" size="icon" className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]">
                   <Copy className="w-3 h-3" />
                 </Button>
-                <Button variant="ghost" size="icon" className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                  onClick={() => void exportActiveTable('csv')}
+                  title="Export CSV"
+                >
                   <Download className="w-3 h-3" />
                 </Button>
               </div>
@@ -108,6 +140,16 @@ export const ResultsPanel = () => {
           </div>
         )}
         
+        {activeResultTab === 'quality' && !activeTable && (
+          <div className="h-full flex items-center justify-center text-muted-foreground text-[13px]">
+            Select a table to view quality report
+          </div>
+        )}
+        {activeResultTab === 'quality' && activeTable && !quality && (
+          <div className="h-full flex items-center justify-center text-muted-foreground text-[13px]">
+            Loading quality report…
+          </div>
+        )}
         {activeResultTab === 'quality' && quality && (
           <div className="space-y-4">
             <h3 className="font-medium text-[13px] text-foreground">Quality Report: {quality.tableName}</h3>
@@ -150,7 +192,12 @@ export const ResultsPanel = () => {
                     <span className="text-muted-foreground">on {op.tableName}</span>
                     <span className="flex-1" />
                     {op.undoable && (
-                      <Button variant="ghost" size="sm" className="h-6 text-[11px] gap-1 px-2 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-[11px] gap-1 px-2 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                        onClick={() => void undoLastOperation()}
+                      >
                         <Undo2 className="w-3 h-3" />
                         Undo
                       </Button>
