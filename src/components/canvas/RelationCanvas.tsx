@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -211,14 +211,45 @@ export const RelationCanvas = () => {
     tables,
     relations,
     lineages,
+    activeTableId,
     setSelectedRelation,
     setSelectedNode,
     setActiveTable,
     openTable,
   } = useAppStore();
-  
-  // Show all tables in current project (loaded from backend canvas API).
-  const canvasTables = useMemo(() => tables, [tables]);
+
+  // Default: Focus mode to avoid a "spaghetti canvas".
+  const [focusMode, setFocusMode] = useState(true);
+
+  const visibleTableIds = useMemo(() => {
+    if (!focusMode) return new Set(tables.map((t) => t.id));
+    if (!activeTableId) return new Set<string>();
+
+    const ids = new Set<string>();
+    ids.add(activeTableId);
+
+    for (const r of relations) {
+      if (r.fkTableId === activeTableId || r.pkTableId === activeTableId) {
+        ids.add(r.fkTableId);
+        ids.add(r.pkTableId);
+      }
+    }
+
+    for (const l of lineages) {
+      if (l.derivedTableId === activeTableId || l.sourceTableIds.includes(activeTableId)) {
+        ids.add(l.derivedTableId);
+        for (const s of l.sourceTableIds) ids.add(s);
+      }
+    }
+
+    return ids;
+  }, [focusMode, activeTableId, tables, relations, lineages]);
+
+  const canvasTables = useMemo(() => {
+    if (!focusMode) return tables;
+    if (!activeTableId) return [];
+    return tables.filter((t) => visibleTableIds.has(t.id));
+  }, [tables, focusMode, activeTableId, visibleTableIds]);
   
   const initialNodes: Node[] = useMemo(() => {
     // Dynamic positioning based on number of tables
@@ -251,7 +282,7 @@ export const RelationCanvas = () => {
   
   const initialEdges: Edge[] = useMemo(() => {
     const ids = new Set(canvasTables.map((t) => t.id));
-    
+
     // Backend relations (PK/FK) - connect PK field to FK field.
     const relEdges: Edge[] = relations
       .filter((r) => ids.has(r.fkTableId) && ids.has(r.pkTableId))
@@ -335,8 +366,34 @@ export const RelationCanvas = () => {
     setActiveTable(node.id);
   }, [setSelectedNode, openTable, setActiveTable]);
   
+  if (focusMode && !activeTableId) {
+    return (
+      <div className="h-full w-full bg-canvas-background relative flex items-center justify-center">
+        <div className="text-sm text-muted-foreground">Select a table to focus the canvas.</div>
+        <div className="absolute top-3 right-3">
+          <button
+            className="text-[12px] px-2 py-1 rounded border border-border bg-background/80 hover:bg-background"
+            onClick={() => setFocusMode(false)}
+            title="Show all tables"
+          >
+            Global
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full bg-canvas-background relative">
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+        <button
+          className="text-[12px] px-2 py-1 rounded border border-border bg-background/80 hover:bg-background"
+          onClick={() => setFocusMode((v) => !v)}
+          title={focusMode ? "Switch to global canvas" : "Switch to focus canvas"}
+        >
+          {focusMode ? "Focus" : "Global"}
+        </button>
+      </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}
