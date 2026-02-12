@@ -279,6 +279,7 @@ export const AppSidebar = () => {
     activeTableId,
     openTableIds,
     importDatasetToProject,
+    importDatasetAsNewProject,
   } = useAppStore();
   
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
@@ -396,21 +397,39 @@ export const AppSidebar = () => {
             
             {/* Quick import for current project */}
             {project.id === currentProjectId && (
-              <label className="flex items-center gap-2 px-2 py-[5px] text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-full transition-colors duration-75 mt-0.5 cursor-pointer">
-                <Plus className="w-3 h-3" />
-                <span>Import data…</span>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".csv,.xlsx,.xls"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    void importDatasetToProject(project.id, f);
-                    e.currentTarget.value = "";
-                  }}
-                />
-              </label>
+              <div className="mt-0.5 space-y-0.5">
+                <label className="flex items-center gap-2 px-2 py-[5px] text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-full transition-colors duration-75 cursor-pointer">
+                  <Plus className="w-3 h-3" />
+                  <span>Import into this project…</span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      void importDatasetToProject(project.id, f);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+
+                <label className="flex items-center gap-2 px-2 py-[5px] text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-full transition-colors duration-75 cursor-pointer">
+                  <FolderPlus className="w-3 h-3" />
+                  <span>Import as new project…</span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      void importDatasetAsNewProject(f);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+              </div>
             )}
           </ProjectItem>
         ))}

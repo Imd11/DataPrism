@@ -48,6 +48,7 @@ interface AppState {
   files: DataFile[];
   importDataset: (file: File) => Promise<void>;
   importDatasetToProject: (projectId: string, file: File) => Promise<void>;
+  importDatasetAsNewProject: (file: File) => Promise<void>;
 
   // Tables state
   tables: DataTable[];
@@ -209,6 +210,32 @@ export const useAppStore = create<AppState>((set, get) => ({
       const res = await api.importFile(projectId, file);
       await loadProjectData(projectId, set);
       await get().openTable(res.table.id);
+      // UX: land users in results after import.
+      set({ activeResultTab: "summary", loading: false });
+    } catch (e: any) {
+      set({ loading: false, error: e?.message ?? "Import failed" });
+    }
+  },
+
+  importDatasetAsNewProject: async (file) => {
+    const base = file.name.replace(/\.[^.]+$/, "").trim();
+    const name = base ? base.slice(0, 48) : "New Project";
+    set({ loading: true, error: null });
+    try {
+      const created = await api.createProject({ name });
+      const projects = await api.listProjects();
+      set({
+        projects,
+        currentProjectId: created.id,
+        openTableIds: [],
+        activeTableId: null,
+        tableData: {},
+        summaryByTableId: {},
+        qualityByTableId: {},
+        chartsByTableId: {},
+      });
+      await loadProjectData(created.id, set);
+      await get().importDatasetToProject(created.id, file);
       set({ loading: false });
     } catch (e: any) {
       set({ loading: false, error: e?.message ?? "Import failed" });
