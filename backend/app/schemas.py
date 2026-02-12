@@ -272,4 +272,5 @@ class ChartOut(BaseModel):
   kind: str
   field: str
   data: dict[str, Any]
+  vegaLite: dict[str, Any] | None = None
   timestamp: datetime
