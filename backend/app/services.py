@@ -1065,6 +1065,13 @@ def compute_chart(conn: duckdb.DuckDBPyConnection, table_id: str, payload: dict[
     bins = int(payload.get("bins", 20))
     limit = int(payload.get("limit", 10))
 
+    def vega_lite(spec: dict[str, Any]) -> dict[str, Any]:
+        # Non-breaking: add a Vega-Lite spec alongside existing chart data so the frontend can render immediately.
+        return {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            **spec,
+        }
+
     cols = {c[0] for c in _list_columns(conn, physical)}
     if field not in cols:
         raise ValueError("Unknown field")
@@ -1103,7 +1110,24 @@ def compute_chart(conn: duckdb.DuckDBPyConnection, table_id: str, payload: dict[
             x0 = min_v + (b * width)
             x1 = x0 + width
             out_bins.append({"x0": x0, "x1": x1, "count": int(r["count"])})
-        return {"kind": kind, "field": field, "data": {"bins": out_bins}, "timestamp": ts}
+        return {
+            "kind": kind,
+            "field": field,
+            "data": {"bins": out_bins},
+            "vegaLite": vega_lite(
+                {
+                    "description": f"Histogram of {field}",
+                    "data": {"values": out_bins},
+                    "mark": "bar",
+                    "encoding": {
+                        "x": {"field": "x0", "type": "quantitative", "bin": {"binned": True}},
+                        "x2": {"field": "x1"},
+                        "y": {"field": "count", "type": "quantitative"},
+                    },
+                }
+            ),
+            "timestamp": ts,
+        }
 
     if kind == "bar":
         df = conn.execute(
@@ -1117,7 +1141,24 @@ def compute_chart(conn: duckdb.DuckDBPyConnection, table_id: str, payload: dict[
             """,
             [limit],
         ).fetchdf()
-        return {"kind": kind, "field": field, "data": {"values": df.to_dict(orient="records")}, "timestamp": ts}
+        values = df.to_dict(orient="records")
+        return {
+            "kind": kind,
+            "field": field,
+            "data": {"values": values},
+            "vegaLite": vega_lite(
+                {
+                    "description": f"Top categories of {field}",
+                    "data": {"values": values},
+                    "mark": "bar",
+                    "encoding": {
+                        "x": {"field": "value", "type": "nominal", "sort": "-y"},
+                        "y": {"field": "count", "type": "quantitative"},
+                    },
+                }
+            ),
+            "timestamp": ts,
+        }
 
     if kind == "line":
         value_field = payload.get("valueField")
@@ -1143,7 +1184,25 @@ def compute_chart(conn: duckdb.DuckDBPyConnection, table_id: str, payload: dict[
                 order by x asc
                 """
             ).fetchdf()
-        return {"kind": kind, "field": field, "data": {"points": df.to_dict(orient="records")}, "timestamp": ts}
+        points = df.to_dict(orient="records")
+        y_title = f"avg({value_field})" if value_field else "count"
+        return {
+            "kind": kind,
+            "field": field,
+            "data": {"points": points},
+            "vegaLite": vega_lite(
+                {
+                    "description": f"Line chart by {field}",
+                    "data": {"values": points},
+                    "mark": {"type": "line", "point": True},
+                    "encoding": {
+                        "x": {"field": "x", "type": "temporal"},
+                        "y": {"field": "y", "type": "quantitative", "title": y_title},
+                    },
+                }
+            ),
+            "timestamp": ts,
+        }
 
     raise ValueError("Unsupported chart kind")
 
