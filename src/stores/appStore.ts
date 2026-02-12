@@ -82,8 +82,10 @@ interface AppState {
   // Results caches
   summaryByTableId: Record<string, SummaryResult | undefined>;
   qualityByTableId: Record<string, QualityReport | undefined>;
+  chartsByTableId: Record<string, any | undefined>;
   fetchSummary: (tableId: string) => Promise<void>;
   fetchQuality: (tableId: string) => Promise<void>;
+  fetchCharts: (tableId: string, opts?: { kind?: "histogram" | "bar" | "line"; field?: string }) => Promise<void>;
 
   // Actions
   cleanColumns: (tableId: string, action: string, columns: string[]) => Promise<void>;
@@ -116,18 +118,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await api.health();
       let projects = await api.listProjects();
+      // Do NOT auto-seed demo data. DataPrism should start empty and require user upload/import.
       if (projects.length === 0) {
-        await api.seedDemo();
-        projects = await api.listProjects();
+        const created = await api.createProject({ name: "Project Alpha" });
+        projects = [created];
       }
       const currentProjectId = projects[0]?.id ?? null;
       set({ projects, currentProjectId });
       if (currentProjectId) {
         await loadProjectData(currentProjectId, set);
-        const firstTableId = get().tables[0]?.id;
-        if (firstTableId) {
-          await get().openTable(firstTableId);
-        }
+        // Do not auto-open any table. User should import/upload first.
       }
       set({ bootstrapped: true, loading: false });
     } catch (e: any) {
@@ -166,6 +166,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         tableData: {},
         summaryByTableId: {},
         qualityByTableId: {},
+        chartsByTableId: {},
       });
       await loadProjectData(created.id, set);
       set({ loading: false });
@@ -199,6 +200,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           tableData: {},
           summaryByTableId: {},
           qualityByTableId: {},
+          chartsByTableId: {},
         });
         await loadProjectData(projectId, set);
       }
@@ -314,6 +316,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   summaryByTableId: {},
   qualityByTableId: {},
+  chartsByTableId: {},
 
   fetchSummary: async (tableId) => {
     const projectId = get().currentProjectId;

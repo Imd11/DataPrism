@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
+import { ChartsView } from './ChartsView';
 
 const tabs = [
   { id: 'summary', label: 'Summary', icon: BarChart3 },
@@ -209,7 +210,11 @@ export const ResultsPanel = () => {
           </div>
         )}
         
-        {(activeResultTab === 'charts' || activeResultTab === 'merge' || activeResultTab === 'reshape') && (
+        {activeResultTab === 'charts' && (
+          <ChartsView />
+        )}
+
+        {(activeResultTab === 'merge' || activeResultTab === 'reshape') && (
           <div className="h-full flex items-center justify-center text-muted-foreground text-[13px]">
             Select a table and run an analysis to see results
           </div>

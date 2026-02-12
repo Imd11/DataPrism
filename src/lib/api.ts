@@ -201,6 +201,20 @@ export const api = {
       body: JSON.stringify({ format }),
     });
   },
+
+  async charts(projectId: string, tableId: string, input: { kind: "histogram" | "bar" | "line"; field: string; bins?: number; limit?: number; valueField?: string | null }): Promise<any> {
+    return requestJson(`/api/projects/${projectId}/tables/${tableId}/charts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        kind: input.kind,
+        field: input.field,
+        bins: input.bins ?? 20,
+        limit: input.limit ?? 10,
+        valueField: input.valueField ?? null,
+      }),
+    });
+  },
 };
 
 export type { ApiError };
