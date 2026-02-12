@@ -313,7 +313,7 @@ def refresh_inferred_relations(conn: duckdb.DuckDBPyConnection, coverage_thresho
                 rid = _stable_relation_id(fk_tid, [shared_col], pk_tid, [shared_col])
                 conn.execute(
                     """
-                    insert into dw_meta.relation_edges_inferred
+                    insert or replace into dw_meta.relation_edges_inferred
                       (id, fk_table_id, fk_fields_json, pk_table_id, pk_fields_json, cardinality, coverage, created_at)
                     values (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
