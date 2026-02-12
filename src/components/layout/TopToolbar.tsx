@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useAppStore } from '@/stores/appStore';
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 export const TopToolbar = () => {
@@ -33,10 +33,14 @@ export const TopToolbar = () => {
     undoLastOperation,
     exportActiveTable,
     importDataset,
+    importDatasetAsNewProject,
     loading,
     error,
   } = useAppStore();
-  
+
+  const importThisRef = useRef<HTMLInputElement | null>(null);
+  const importNewProjectRef = useRef<HTMLInputElement | null>(null);
+
   const [isDark, setIsDark] = useState(false);
   const currentProject = projects.find(p => p.id === currentProjectId);
   
@@ -66,27 +70,64 @@ export const TopToolbar = () => {
       
       {/* Left Section - Actions */}
       <div className="flex items-center gap-0.5">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
-        >
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <Upload className="w-3.5 h-3.5" />
-            <span>Import</span>
-            <input
-              type="file"
-              className="hidden"
-              accept=".csv,.xlsx,.xls"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (!f) return;
-                void importDataset(f);
-                e.currentTarget.value = "";
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import</span>
+              <ChevronDown className="w-3 h-3 ml-0.5 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56 notion-popover-shadow">
+            <DropdownMenuItem
+              className="py-2"
+              onSelect={(e) => {
+                e.preventDefault();
+                importThisRef.current?.click();
               }}
-            />
-          </label>
-        </Button>
+            >
+              Import into this project…
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="py-2"
+              onSelect={(e) => {
+                e.preventDefault();
+                importNewProjectRef.current?.click();
+              }}
+            >
+              Import as new project…
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+
+          <input
+            ref={importThisRef}
+            type="file"
+            className="hidden"
+            accept=".csv,.xlsx,.xls"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              void importDataset(f);
+              e.currentTarget.value = "";
+            }}
+          />
+          <input
+            ref={importNewProjectRef}
+            type="file"
+            className="hidden"
+            accept=".csv,.xlsx,.xls"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              void importDatasetAsNewProject(f);
+              e.currentTarget.value = "";
+            }}
+          />
+        </DropdownMenu>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
