@@ -83,9 +83,11 @@ interface AppState {
   summaryByTableId: Record<string, SummaryResult | undefined>;
   qualityByTableId: Record<string, QualityReport | undefined>;
   chartsByTableId: Record<string, any | undefined>;
+  chartsLoadingByTableId: Record<string, boolean | undefined>;
+  chartsErrorByTableId: Record<string, string | undefined>;
   fetchSummary: (tableId: string) => Promise<void>;
   fetchQuality: (tableId: string) => Promise<void>;
-  fetchCharts: (tableId: string, opts?: { kind?: "histogram" | "bar" | "line"; field?: string }) => Promise<void>;
+  fetchCharts: (tableId: string, opts?: { kind?: "histogram" | "bar" | "line"; field?: string; valueField?: string | null }) => Promise<void>;
 
   // Actions
   cleanColumns: (tableId: string, action: string, columns: string[]) => Promise<void>;
@@ -317,6 +319,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   summaryByTableId: {},
   qualityByTableId: {},
   chartsByTableId: {},
+  chartsLoadingByTableId: {},
+  chartsErrorByTableId: {},
 
   fetchSummary: async (tableId) => {
     const projectId = get().currentProjectId;
@@ -330,6 +334,45 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!projectId) return;
     const q = await api.quality(projectId, tableId);
     set((state: AppState) => ({ qualityByTableId: { ...state.qualityByTableId, [tableId]: q } }));
+  },
+
+  fetchCharts: async (tableId, opts) => {
+    const projectId = get().currentProjectId;
+    if (!projectId) return;
+    const table = get().tables.find((t) => t.id === tableId);
+    if (!table) return;
+
+    const kind = opts?.kind ?? "histogram";
+    let field = opts?.field;
+    if (!field) {
+      const fallback = table.fields.find((f) => ["float8", "int8", "int4"].includes(f.type));
+      field = fallback?.name ?? table.fields[0]?.name;
+    }
+    if (!field) return;
+
+    set((state: AppState) => ({
+      chartsLoadingByTableId: { ...state.chartsLoadingByTableId, [tableId]: true },
+      chartsErrorByTableId: { ...state.chartsErrorByTableId, [tableId]: undefined },
+    }));
+
+    try {
+      const res = await api.charts(projectId, tableId, {
+        kind,
+        field,
+        bins: 20,
+        limit: 10,
+        valueField: opts?.valueField ?? null,
+      });
+      set((state: AppState) => ({
+        chartsByTableId: { ...state.chartsByTableId, [tableId]: res },
+        chartsLoadingByTableId: { ...state.chartsLoadingByTableId, [tableId]: false },
+      }));
+    } catch (e: any) {
+      set((state: AppState) => ({
+        chartsLoadingByTableId: { ...state.chartsLoadingByTableId, [tableId]: false },
+        chartsErrorByTableId: { ...state.chartsErrorByTableId, [tableId]: e?.message ?? "Chart failed" },
+      }));
+    }
   },
 
   cleanColumns: async (tableId, action, columns) => {

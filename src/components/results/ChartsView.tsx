@@ -9,6 +9,8 @@ export const ChartsView = () => {
     activeTableId,
     activeResultTab,
     chartsByTableId,
+    chartsLoadingByTableId,
+    chartsErrorByTableId,
     summaryByTableId,
     fetchSummary,
     fetchCharts,
@@ -17,6 +19,8 @@ export const ChartsView = () => {
   const table = tables.find((t) => t.id === activeTableId);
   const summary = table ? summaryByTableId[table.id] : undefined;
   const charts = table ? chartsByTableId[table.id] : undefined;
+  const chartsLoading = table ? chartsLoadingByTableId[table.id] : false;
+  const chartsError = table ? chartsErrorByTableId[table.id] : undefined;
 
   const [selectedField, setSelectedField] = useState<string | null>(null);
 
@@ -78,15 +82,19 @@ export const ChartsView = () => {
           <Button
             size="sm"
             className="h-7 text-[12px]"
-            disabled={!selectedField}
+            disabled={!selectedField || chartsLoading}
             onClick={() => void fetchCharts(table.id, { kind: "histogram", field: selectedField ?? undefined })}
           >
-            Histogram
+            {chartsLoading ? "Loading…" : "Histogram"}
           </Button>
         </div>
       </div>
 
-      {!charts ? (
+      {chartsError ? (
+        <div className="h-40 flex items-center justify-center text-red-300 text-[13px] border border-dashed border-border rounded-md">
+          Chart failed: {chartsError}
+        </div>
+      ) : !charts ? (
         <div className="h-40 flex items-center justify-center text-muted-foreground text-[13px] border border-dashed border-border rounded-md">
           Click Histogram to generate a chart
         </div>
