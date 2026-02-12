@@ -12,6 +12,15 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      // Avoid ENOSPC (file watcher limit) by ignoring heavy backend/venv directories.
+      watch: {
+        ignored: [
+          "**/backend/.venv/**",
+          "**/.data-weaver/**",
+          "**/node_modules/**",
+          "**/dist/**",
+        ],
+      },
       hmr: {
         overlay: false,
       },
