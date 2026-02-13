@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -124,6 +125,17 @@ def get_project(project_id: str) -> dict:
   if not manifest.exists():
     raise HTTPException(status_code=404, detail="Project not found")
   return json.loads(manifest.read_text(encoding="utf-8"))
+
+
+@router.delete("/projects/{project_id}")
+def delete_project(project_id: str) -> dict:
+  manifest = project_manifest_path(settings, project_id)
+  if not manifest.exists():
+    raise HTTPException(status_code=404, detail="Project not found")
+  from ..storage import project_dir
+  proj_dir = project_dir(settings, project_id)
+  shutil.rmtree(proj_dir, ignore_errors=True)
+  return {"ok": True}
 
 
 @router.get("/projects/{project_id}/files", response_model=list[DataFileOut])

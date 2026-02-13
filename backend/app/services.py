@@ -225,7 +225,11 @@ def _normalized_key_expr(col: str) -> str:
 
 
 def refresh_inferred_relations(conn: duckdb.DuckDBPyConnection, coverage_threshold: float = 0.9) -> None:
-    table_ids = [r[0] for r in conn.execute("select id from dw_meta.tables").fetchall()]
+    # Exclude derived tables (merge/reshape results) — they already contain columns
+    # from source tables, so inferring relations from them creates spurious edges.
+    table_ids = [r[0] for r in conn.execute(
+        "select id from dw_meta.tables where source_type != 'derived'"
+    ).fetchall()]
     if not table_ids:
         return
 

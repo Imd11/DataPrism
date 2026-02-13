@@ -126,6 +126,10 @@ export const api = {
     return requestJson("/api/demo/seed", { method: "POST" });
   },
 
+  async deleteProject(projectId: string): Promise<{ ok: boolean }> {
+    return requestJson(`/api/projects/${projectId}`, { method: "DELETE" });
+  },
+
   async listFiles(projectId: string): Promise<DataFile[]> {
     const raw = await requestJson<any[]>(`/api/projects/${projectId}/files`);
     return raw.map((f) => parseFile(f, projectId));
@@ -213,6 +217,22 @@ export const api = {
         limit: input.limit ?? 10,
         valueField: input.valueField ?? null,
       }),
+    });
+  },
+
+  async merge(projectId: string, input: { leftTableId: string; rightTableId: string; leftKeys: string[]; rightKeys: string[]; joinType: "1:1" | "1:m" | "m:1"; how?: "full" | "left" | "right" | "inner"; resultName?: string }): Promise<any> {
+    return requestJson(`/api/projects/${projectId}/merge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  },
+
+  async reshape(projectId: string, input: { tableId: string; direction: "wide-to-long" | "long-to-wide"; idVars: string[]; valueVars: string[]; variableName?: string; valueName?: string; pivotColumns?: string; pivotValues?: string; resultName?: string }): Promise<any> {
+    return requestJson(`/api/projects/${projectId}/reshape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
     });
   },
 };

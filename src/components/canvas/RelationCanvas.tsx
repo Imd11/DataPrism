@@ -14,15 +14,32 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useAppStore } from '@/stores/appStore';
-import { Table2, Key, Hash, Fingerprint, Circle, Link2, ExternalLink } from 'lucide-react';
+import {
+  Table2,
+  Key,
+  Hash,
+  Fingerprint,
+  Link2,
+  Circle,
+  MoreHorizontal,
+  EyeOff,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Field } from '@/types/data';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 interface TableNodeData {
   label: string;
   fields: Field[];
   rowCount: number;
   isDerived: boolean;
+  isFocused: boolean;
+  onRemove?: () => void;
 }
 
 const FieldIcon = ({ field }: { field: Field }) => {
@@ -44,15 +61,15 @@ const FieldIcon = ({ field }: { field: Field }) => {
 const NullableIcon = ({ nullable }: { nullable: boolean }) => {
   if (nullable) {
     return (
-      <Circle 
-        className="w-2.5 h-2.5 text-muted-foreground/50 flex-shrink-0" 
+      <Circle
+        className="w-2.5 h-2.5 text-muted-foreground/50 flex-shrink-0"
         strokeWidth={1.5}
       />
     );
   }
   return (
-    <Circle 
-      className="w-2.5 h-2.5 text-amber-500 fill-amber-500 flex-shrink-0" 
+    <Circle
+      className="w-2.5 h-2.5 text-amber-500 fill-amber-500 flex-shrink-0"
       strokeWidth={0}
     />
   );
@@ -81,13 +98,18 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
   return (
     <div className={cn(
       "min-w-[240px] max-w-[280px] rounded-md border bg-canvas-node overflow-hidden transition-all",
-      selected ? "border-foreground/50 ring-2 ring-foreground/10" : "border-canvas-node-border",
-      data.isDerived && "border-dashed border-warning/50"
+      data.isFocused
+        ? "border-blue-500/60 ring-2 ring-blue-500/15 shadow-[0_0_12px_rgba(59,130,246,0.12)]"
+        : selected ? "border-foreground/50 ring-2 ring-foreground/10" : "border-canvas-node-border",
+      data.isDerived && !data.isFocused && "border-dashed border-warning/50"
     )}>
       {/* Header */}
-      <div className="px-3 py-2 border-b border-canvas-node-border bg-muted/30 flex items-center justify-between gap-2">
+      <div className={cn(
+        "px-3 py-2 border-b border-canvas-node-border flex items-center justify-between gap-2",
+        data.isFocused ? "bg-blue-500/10" : "bg-muted/30"
+      )}>
         <div className="flex items-center gap-2">
-          <Table2 className="w-4 h-4 text-muted-foreground" />
+          <Table2 className={cn("w-4 h-4", data.isFocused ? "text-blue-500" : "text-muted-foreground")} />
           <span className="font-medium text-sm text-foreground">{data.label}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -96,14 +118,34 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
               derived
             </span>
           )}
-          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-foreground cursor-pointer" />
+          {data.onRemove && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-muted/60 text-muted-foreground/50 hover:text-foreground transition-colors"
+                >
+                  <MoreHorizontal className="w-3.5 h-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  onClick={(e) => { e.stopPropagation(); data.onRemove!(); }}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                  从 Canvas 移除
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
-      
+
       {/* Fields with individual handles */}
       <div className="divide-y divide-canvas-node-border/50">
         {data.fields.map((field, idx) => (
-          <div 
+          <div
             key={`${field.name}-${idx}`}
             className={cn(
               "px-3 py-1.5 flex items-center text-xs hover:bg-muted/20 transition-colors relative",
@@ -111,14 +153,14 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
             )}
           >
             {/* Left handle - invisible, only for edge connections */}
-            <Handle 
-              type="target" 
+            <Handle
+              type="target"
               position={Position.Left}
               id={`${field.name}-left`}
               className="!w-0 !h-0 !bg-transparent !border-0 !min-w-0 !min-h-0"
               style={{ top: '50%', left: 0, opacity: 0 }}
             />
-            
+
             {/* Icons container - fixed width columns for alignment */}
             <div className="flex items-center gap-0">
               {/* Column 1: Nullable indicator - always first for alignment */}
@@ -130,7 +172,7 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
                 <FieldIcon field={field} />
               </div>
             </div>
-            
+
             {/* Field name */}
             <span className={cn(
               "flex-1 truncate ml-2",
@@ -138,15 +180,15 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
             )}>
               {field.name}
             </span>
-            
+
             {/* Type */}
             <span className="text-muted-foreground text-[11px] font-mono">
               {getTypeLabel(field.type)}
             </span>
-            
+
             {/* Right handle - invisible, only for edge connections */}
-            <Handle 
-              type="source" 
+            <Handle
+              type="source"
               position={Position.Right}
               id={`${field.name}-right`}
               className="!w-0 !h-0 !bg-transparent !border-0 !min-w-0 !min-h-0"
@@ -155,7 +197,7 @@ const TableNode = ({ data, selected }: { data: TableNodeData; selected: boolean 
           </div>
         ))}
       </div>
-      
+
       {/* Footer */}
       <div className="px-3 py-1.5 border-t border-canvas-node-border bg-muted/20 text-[10px] text-muted-foreground">
         {data.rowCount.toLocaleString()} rows
@@ -216,10 +258,13 @@ export const RelationCanvas = () => {
     setSelectedNode,
     setActiveTable,
     openTable,
+    hiddenCanvasTableIds,
+    removeFromCanvas,
+    addToCanvas,
   } = useAppStore();
 
-  // Default: Focus mode to avoid a "spaghetti canvas".
-  const [focusMode, setFocusMode] = useState(true);
+  // Default: Global mode to show all tables.
+  const [focusMode, setFocusMode] = useState(false);
 
   const visibleTableIds = useMemo(() => {
     if (!focusMode) return new Set(tables.map((t) => t.id));
@@ -246,11 +291,13 @@ export const RelationCanvas = () => {
   }, [focusMode, activeTableId, tables, relations, lineages]);
 
   const canvasTables = useMemo(() => {
-    if (!focusMode) return tables;
+    const hiddenSet = new Set(hiddenCanvasTableIds);
+    const filtered = tables.filter(t => !hiddenSet.has(t.id));
+    if (!focusMode) return filtered;
     if (!activeTableId) return [];
-    return tables.filter((t) => visibleTableIds.has(t.id));
-  }, [tables, focusMode, activeTableId, visibleTableIds]);
-  
+    return filtered.filter((t) => visibleTableIds.has(t.id));
+  }, [tables, focusMode, activeTableId, visibleTableIds, hiddenCanvasTableIds]);
+
   const initialNodes: Node[] = useMemo(() => {
     // Dynamic positioning based on number of tables
     const cols = Math.max(1, Math.ceil(Math.sqrt(canvasTables.length)));
@@ -258,28 +305,30 @@ export const RelationCanvas = () => {
     const nodeHeight = 280;
     const gapX = 100;
     const gapY = 80;
-    
-    return canvasTables.map((table, idx) => {
+
+    return canvasTables.map((t, idx) => {
       const col = idx % cols;
       const row = Math.floor(idx / cols);
-      
+
       return {
-        id: table.id,
+        id: t.id,
         type: 'tableNode',
-        position: { 
-          x: 50 + col * (nodeWidth + gapX), 
-          y: 50 + row * (nodeHeight + gapY) 
+        position: {
+          x: 50 + col * (nodeWidth + gapX),
+          y: 50 + row * (nodeHeight + gapY)
         },
         data: {
-          label: table.name,
-          fields: table.fields,
-          rowCount: table.rowCount,
-          isDerived: table.sourceType === 'derived',
+          label: t.name,
+          fields: t.fields,
+          rowCount: t.rowCount,
+          isDerived: t.sourceType === 'derived',
+          isFocused: focusMode && t.id === activeTableId,
+          onRemove: () => removeFromCanvas(t.id),
         },
       };
     });
-  }, [canvasTables]);
-  
+  }, [canvasTables, removeFromCanvas]);
+
   const initialEdges: Edge[] = useMemo(() => {
     const ids = new Set(canvasTables.map((t) => t.id));
 
@@ -298,20 +347,19 @@ export const RelationCanvas = () => {
           label: displayCardinality(rel.cardinality),
           type: 'smoothstep',
           animated: true,
-          markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
-          style: { 
-            stroke: 'hsl(var(--foreground) / 0.4)', 
+          style: {
+            stroke: 'hsl(var(--foreground) / 0.4)',
             strokeWidth: 1.5,
             opacity: 0.75,
           },
-          labelStyle: { 
-            fontSize: 11, 
-            fill: 'hsl(var(--foreground))', 
+          labelStyle: {
+            fontSize: 11,
+            fill: 'hsl(var(--foreground))',
             fontWeight: 600,
             letterSpacing: '0.5px',
           },
-          labelBgStyle: { 
-            fill: 'hsl(var(--background))', 
+          labelBgStyle: {
+            fill: 'hsl(var(--background))',
             fillOpacity: 0.95,
             rx: 4,
             ry: 4,
@@ -319,7 +367,7 @@ export const RelationCanvas = () => {
           labelBgPadding: [6, 4] as [number, number],
         };
       });
-    
+
     // Lineage edges - orange animated lines for derived tables
     const linEdges: Edge[] = lineages
       .flatMap((lin) =>
@@ -339,10 +387,10 @@ export const RelationCanvas = () => {
             },
           })),
       );
-    
+
     return [...relEdges, ...linEdges];
   }, [relations, lineages, canvasTables]);
-  
+
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -359,13 +407,13 @@ export const RelationCanvas = () => {
     });
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
-  
+
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node.id);
     void openTable(node.id);
     setActiveTable(node.id);
   }, [setSelectedNode, openTable, setActiveTable]);
-  
+
   if (focusMode && !activeTableId) {
     return (
       <div className="h-full w-full bg-canvas-background relative flex items-center justify-center">
@@ -384,7 +432,15 @@ export const RelationCanvas = () => {
   }
 
   return (
-    <div className="h-full w-full bg-canvas-background relative">
+    <div
+      className="h-full w-full bg-canvas-background relative"
+      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+      onDrop={(e) => {
+        e.preventDefault();
+        const tableId = e.dataTransfer.getData('application/dataprism-table');
+        if (tableId) addToCanvas(tableId);
+      }}
+    >
       <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
         <button
           className="text-[12px] px-2 py-1 rounded border border-border bg-background/80 hover:bg-background"
@@ -413,13 +469,13 @@ export const RelationCanvas = () => {
         proOptions={{ hideAttribution: true }}
       >
         <Background color="hsl(var(--canvas-grid))" gap={24} size={1} />
-        <Controls 
-          className="!bg-background !border-border !shadow-sm !rounded-lg overflow-hidden" 
+        <Controls
+          className="!bg-background !border-border !shadow-sm !rounded-lg overflow-hidden"
           showInteractive={false}
         />
-        <MiniMap 
-          className="!bg-background/95 !border-border !rounded-lg overflow-hidden" 
-          nodeColor="hsl(var(--muted))" 
+        <MiniMap
+          className="!bg-background/95 !border-border !rounded-lg overflow-hidden"
+          nodeColor="hsl(var(--muted))"
           maskColor="hsl(var(--background) / 0.8)"
         />
       </ReactFlow>

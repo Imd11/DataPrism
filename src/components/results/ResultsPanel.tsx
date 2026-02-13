@@ -1,9 +1,9 @@
-import { 
-  BarChart3, 
-  PieChart, 
-  AlertTriangle, 
-  GitMerge, 
-  Shuffle, 
+import {
+  BarChart3,
+  PieChart,
+  AlertTriangle,
+  GitMerge,
+  Shuffle,
   History,
   Copy,
   Download,
@@ -14,6 +14,8 @@ import { useAppStore } from '@/stores/appStore';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 import { ChartsView } from './ChartsView';
+import { MergePanel } from './MergePanel';
+import { ReshapePanel } from './ReshapePanel';
 
 const tabs = [
   { id: 'summary', label: 'Summary', icon: BarChart3 },
@@ -25,10 +27,10 @@ const tabs = [
 ] as const;
 
 export const ResultsPanel = () => {
-  const { 
-    activeResultTab, 
-    setActiveResultTab, 
-    tables, 
+  const {
+    activeResultTab,
+    setActiveResultTab,
+    tables,
     activeTableId,
     operationHistory,
     summaryByTableId,
@@ -38,11 +40,11 @@ export const ResultsPanel = () => {
     exportActiveTable,
     undoLastOperation,
   } = useAppStore();
-  
+
   const activeTable = tables.find(t => t.id === activeTableId);
   const summary = activeTable ? summaryByTableId[activeTable.id] : undefined;
   const quality = activeTable ? qualityByTableId[activeTable.id] : undefined;
-  
+
   useEffect(() => {
     if (!activeTable) return;
     if (activeResultTab === 'summary' && !summary) {
@@ -52,7 +54,7 @@ export const ResultsPanel = () => {
       void fetchQuality(activeTable.id);
     }
   }, [activeResultTab, activeTable, summary, quality, fetchSummary, fetchQuality]);
-  
+
   return (
     <div className="h-full flex flex-col bg-results-background">
       {/* Tab Bar */}
@@ -73,7 +75,7 @@ export const ResultsPanel = () => {
           </button>
         ))}
       </div>
-      
+
       {/* Content */}
       <div className="flex-1 overflow-auto p-3">
         {activeResultTab === 'summary' && !activeTable && (
@@ -140,7 +142,7 @@ export const ResultsPanel = () => {
             )}
           </div>
         )}
-        
+
         {activeResultTab === 'quality' && !activeTable && (
           <div className="h-full flex items-center justify-center text-muted-foreground text-[13px]">
             Select a table to view quality report
@@ -179,7 +181,7 @@ export const ResultsPanel = () => {
             )}
           </div>
         )}
-        
+
         {activeResultTab === 'history' && (
           <div className="space-y-2">
             <h3 className="font-medium text-[13px] text-foreground mb-3">Operation History</h3>
@@ -209,15 +211,17 @@ export const ResultsPanel = () => {
             )}
           </div>
         )}
-        
+
         {activeResultTab === 'charts' && (
           <ChartsView />
         )}
 
-        {(activeResultTab === 'merge' || activeResultTab === 'reshape') && (
-          <div className="h-full flex items-center justify-center text-muted-foreground text-[13px]">
-            Select a table and run an analysis to see results
-          </div>
+        {activeResultTab === 'merge' && (
+          <MergePanel />
+        )}
+
+        {activeResultTab === 'reshape' && (
+          <ReshapePanel />
         )}
       </div>
     </div>

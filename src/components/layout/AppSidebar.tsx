@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, 
+import {
+  ChevronLeft,
   ChevronRight,
-  FolderOpen, 
+  FolderOpen,
   Plus,
   ChevronDown,
   MoreHorizontal,
@@ -41,21 +41,22 @@ interface ProjectItemProps {
   onToggle: () => void;
   onSelect: () => void;
   onImport: (projectId: string, file: File) => void;
+  onDelete: (projectId: string) => void;
   children: React.ReactNode;
 }
 
-const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, onImport, children }: ProjectItemProps) => {
+const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, onImport, onDelete, children }: ProjectItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  
+
   return (
     <div className="mb-1">
       {/* Project Header */}
-      <div 
+      <div
         className={cn(
           "group flex items-center gap-1 px-2 py-[6px] mx-1 rounded-sm text-[13px] cursor-pointer transition-colors duration-75",
-          isActive 
-            ? "bg-foreground/[0.06] text-foreground" 
+          isActive
+            ? "bg-foreground/[0.06] text-foreground"
             : "text-foreground/70 hover:bg-foreground/[0.04] hover:text-foreground"
         )}
         onMouseEnter={() => setIsHovered(true)}
@@ -79,21 +80,21 @@ const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, onImpo
             <FolderOpen className="w-3.5 h-3.5 text-muted-foreground/60" />
           )}
         </button>
-        
+
         {/* Project name */}
         <span className="flex-1 truncate font-medium">{project.name}</span>
-        
+
         {/* Dataset count instead of tags */}
         {!isHovered && (
           <span className="text-[11px] text-muted-foreground/40 tabular-nums">
             {/* Will show dataset count once we have per-project filtering */}
           </span>
         )}
-        
+
         {/* More menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button 
+            <button
               className={cn(
                 "p-0.5 rounded-sm transition-opacity duration-75",
                 "hover:bg-foreground/[0.08]",
@@ -138,16 +139,20 @@ const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, onImpo
               <Pencil className="w-4 h-4 text-muted-foreground" />
               <span>Rename</span>
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="gap-2.5 py-2 text-destructive focus:text-destructive focus:bg-destructive/10"
-              disabled
+              onSelect={() => {
+                if (window.confirm(`Delete project "${project.name}"? This cannot be undone.`)) {
+                  onDelete(project.id);
+                }
+              }}
             >
               <Trash2 className="w-4 h-4" />
               <span>Delete Project</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        
+
         <input
           ref={fileInputRef}
           type="file"
@@ -161,7 +166,7 @@ const ProjectItem = ({ project, isActive, isExpanded, onToggle, onSelect, onImpo
           }}
         />
       </div>
-      
+
       {/* Datasets (children) */}
       <AnimatePresence initial={false}>
         {isExpanded && (
@@ -187,6 +192,7 @@ interface DatasetItemProps {
     id: string;
     name: string;
     rowCount: number;
+    fieldCount: number;
     dirty: boolean;
   };
   isActive: boolean;
@@ -196,16 +202,21 @@ interface DatasetItemProps {
 
 const DatasetItem = ({ table, isActive, isOpen, onClick }: DatasetItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
-    <div 
+    <div
       className={cn(
         "group flex items-center gap-2 px-2 py-[5px] rounded-sm text-[13px] cursor-pointer transition-colors duration-75",
-        isActive 
-          ? "bg-foreground/[0.06] text-foreground" 
+        isActive
+          ? "bg-foreground/[0.06] text-foreground"
           : "text-foreground/70 hover:bg-foreground/[0.04] hover:text-foreground"
       )}
       onClick={onClick}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('application/dataprism-table', table.id);
+        e.dataTransfer.effectAllowed = 'copy';
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -214,25 +225,25 @@ const DatasetItem = ({ table, isActive, isOpen, onClick }: DatasetItemProps) => 
         isOpen ? "text-foreground/70" : "text-muted-foreground/50"
       )} />
       <span className="flex-1 truncate">{table.name}</span>
-      
+
       {/* Only show dirty indicator (modified) - orange dot */}
       {table.dirty && (
-        <span 
-          className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" 
+        <span
+          className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0"
           title="Modified - unsaved changes"
         />
       )}
-      
+
       {!isHovered && (
         <span className="text-[11px] text-muted-foreground/40 tabular-nums flex-shrink-0">
-          {table.rowCount.toLocaleString()}
+          {table.rowCount.toLocaleString()} × {table.fieldCount}
         </span>
       )}
-      
+
       {isHovered && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button 
+            <button
               className="p-0.5 rounded-sm hover:bg-foreground/[0.08] transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
@@ -253,7 +264,7 @@ const DatasetItem = ({ table, isActive, isOpen, onClick }: DatasetItemProps) => 
               <Pencil className="w-4 h-4 text-muted-foreground" />
               <span>Rename</span>
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="gap-2.5 py-2 text-destructive focus:text-destructive focus:bg-destructive/10"
             >
               <Trash2 className="w-4 h-4" />
@@ -267,8 +278,8 @@ const DatasetItem = ({ table, isActive, isOpen, onClick }: DatasetItemProps) => 
 };
 
 export const AppSidebar = () => {
-  const { 
-    sidebarCollapsed, 
+  const {
+    sidebarCollapsed,
     setSidebarCollapsed,
     projects,
     currentProjectId,
@@ -280,13 +291,14 @@ export const AppSidebar = () => {
     openTableIds,
     importDatasetToProject,
     importDatasetAsNewProject,
+    deleteProject,
   } = useAppStore();
-  
+
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(currentProjectId ? [currentProjectId] : [])
   );
   const [newProjectOpen, setNewProjectOpen] = useState(false);
-  
+
   const toggleProject = (projectId: string) => {
     setExpandedProjects(prev => {
       const next = new Set(prev);
@@ -298,16 +310,16 @@ export const AppSidebar = () => {
       return next;
     });
   };
-  
+
   const handleSelectProject = (projectId: string) => {
     void setCurrentProject(projectId);
     // Auto-expand when selecting
     setExpandedProjects(prev => new Set(prev).add(projectId));
   };
-  
+
   if (sidebarCollapsed) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ width: 0 }}
         animate={{ width: 44 }}
         className="h-full bg-sidebar border-r border-sidebar-border flex flex-col items-center py-3"
@@ -320,7 +332,7 @@ export const AppSidebar = () => {
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
-        
+
         <div className="flex flex-col items-center gap-0.5 mt-4">
           {projects.map(project => (
             <Button
@@ -329,8 +341,8 @@ export const AppSidebar = () => {
               size="icon"
               className={cn(
                 "w-7 h-7",
-                project.id === currentProjectId 
-                  ? "text-foreground bg-foreground/[0.06]" 
+                project.id === currentProjectId
+                  ? "text-foreground bg-foreground/[0.06]"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
               )}
               title={project.name}
@@ -346,9 +358,9 @@ export const AppSidebar = () => {
       </motion.div>
     );
   }
-  
+
   return (
-    <motion.div 
+    <motion.div
       initial={{ width: 0 }}
       animate={{ width: 260 }}
       className="h-full bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden"
@@ -370,7 +382,7 @@ export const AppSidebar = () => {
           <ChevronLeft className="w-3.5 h-3.5" />
         </Button>
       </div>
-      
+
       {/* Content */}
       <div className="flex-1 overflow-y-auto py-2">
         {/* Projects with nested Datasets */}
@@ -383,18 +395,19 @@ export const AppSidebar = () => {
             onToggle={() => toggleProject(project.id)}
             onSelect={() => handleSelectProject(project.id)}
             onImport={(projectId, file) => void importDatasetToProject(projectId, file)}
+            onDelete={(projectId) => void deleteProject(projectId)}
           >
             {/* Datasets under this project */}
             {project.id === currentProjectId && tables.map(table => (
               <DatasetItem
                 key={table.id}
-                table={table}
+                table={{ ...table, fieldCount: table.fields.length }}
                 isActive={table.id === activeTableId}
                 isOpen={openTableIds.includes(table.id)}
                 onClick={() => void openTable(table.id)}
               />
             ))}
-            
+
             {/* Quick import for current project */}
             {project.id === currentProjectId && (
               <div className="mt-0.5 space-y-0.5">
@@ -433,7 +446,7 @@ export const AppSidebar = () => {
             )}
           </ProjectItem>
         ))}
-        
+
         {/* New Project button */}
         <button
           className="flex items-center gap-2 px-3 py-[6px] mx-1 text-[13px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.04] rounded-sm w-[calc(100%-8px)] transition-colors duration-75 mt-1"
@@ -445,12 +458,12 @@ export const AppSidebar = () => {
           <span>New Project</span>
         </button>
       </div>
-      
+
       {/* Footer */}
       <div className="px-3 py-2 border-t border-sidebar-border text-[11px] text-muted-foreground/40">
         {tables.length} datasets · {projects.length} projects
       </div>
-      
+
       <NewProjectDialog open={newProjectOpen} onOpenChange={setNewProjectOpen} />
     </motion.div>
   );

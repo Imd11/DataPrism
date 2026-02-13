@@ -42,6 +42,7 @@ interface AppState {
   currentProjectId: string | null;
   setCurrentProject: (projectId: string) => Promise<void>;
   createProject: (name: string) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
   createDemoIfEmpty: () => Promise<void>;
 
   // Files state
@@ -71,6 +72,11 @@ interface AppState {
   selectedNodeId: string | null;
   setSelectedNode: (nodeId: string | null) => void;
 
+  // Canvas visibility
+  hiddenCanvasTableIds: string[];
+  removeFromCanvas: (tableId: string) => void;
+  addToCanvas: (tableId: string) => void;
+
   // Results state
   activeResultTab: ResultTab;
   setActiveResultTab: (tab: ResultTab) => void;
@@ -93,6 +99,8 @@ interface AppState {
   // Actions
   cleanColumns: (tableId: string, action: string, columns: string[]) => Promise<void>;
   exportActiveTable: (format: "csv" | "dta") => Promise<void>;
+  mergeTables: (input: { leftTableId: string; rightTableId: string; leftKeys: string[]; rightKeys: string[]; joinType: "1:1" | "1:m" | "m:1"; how?: "full" | "left" | "right" | "inner"; resultName?: string }) => Promise<any>;
+  reshapeTable: (input: { tableId: string; direction: "wide-to-long" | "long-to-wide"; idVars: string[]; valueVars: string[]; variableName?: string; valueName?: string; pivotColumns?: string; pivotValues?: string; resultName?: string }) => Promise<any>;
 }
 
 async function loadProjectData(projectId: string, set: any) {
@@ -175,6 +183,36 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ loading: false });
     } catch (e: any) {
       set({ loading: false, error: e?.message ?? "Failed to create project" });
+    }
+  },
+
+  deleteProject: async (projectId) => {
+    set({ loading: true, error: null });
+    try {
+      await api.deleteProject(projectId);
+      const projects = await api.listProjects();
+      const nextProject = projects[0] ?? null;
+      set({
+        projects,
+        currentProjectId: nextProject?.id ?? null,
+        openTableIds: [],
+        activeTableId: null,
+        tables: [],
+        files: [],
+        relations: [],
+        lineages: [],
+        tableData: {},
+        summaryByTableId: {},
+        qualityByTableId: {},
+        chartsByTableId: {},
+        operationHistory: [],
+      });
+      if (nextProject) {
+        await loadProjectData(nextProject.id, set);
+      }
+      set({ loading: false });
+    } catch (e: any) {
+      set({ loading: false, error: e?.message ?? "Failed to delete project" });
     }
   },
 
@@ -321,6 +359,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedNodeId: null,
   setSelectedNode: (nodeId) => set({ selectedNodeId: nodeId }),
 
+  hiddenCanvasTableIds: [],
+  removeFromCanvas: (tableId) => {
+    const { hiddenCanvasTableIds } = get();
+    if (!hiddenCanvasTableIds.includes(tableId)) {
+      set({ hiddenCanvasTableIds: [...hiddenCanvasTableIds, tableId] });
+    }
+  },
+  addToCanvas: (tableId) => {
+    set({ hiddenCanvasTableIds: get().hiddenCanvasTableIds.filter(id => id !== tableId) });
+  },
+
   activeResultTab: "summary",
   setActiveResultTab: (tab) => set({ activeResultTab: tab }),
 
@@ -419,5 +468,41 @@ export const useAppStore = create<AppState>((set, get) => ({
     const res = await api.exportTable(projectId, tableId, format);
     const url = res.downloadUrl.startsWith("/") ? res.downloadUrl : `/api${res.downloadUrl}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  },
+
+  mergeTables: async (input) => {
+    const projectId = get().currentProjectId;
+    if (!projectId) return;
+    set({ loading: true, error: null });
+    try {
+      const res = await api.merge(projectId, input);
+      await loadProjectData(projectId, set);
+      if (res?.table?.id) {
+        await get().openTable(res.table.id);
+      }
+      set({ loading: false });
+      return res;
+    } catch (e: any) {
+      set({ loading: false, error: e?.message ?? "Merge failed" });
+      throw e;
+    }
+  },
+
+  reshapeTable: async (input) => {
+    const projectId = get().currentProjectId;
+    if (!projectId) return;
+    set({ loading: true, error: null });
+    try {
+      const res = await api.reshape(projectId, input);
+      await loadProjectData(projectId, set);
+      if (res?.table?.id) {
+        await get().openTable(res.table.id);
+      }
+      set({ loading: false });
+      return res;
+    } catch (e: any) {
+      set({ loading: false, error: e?.message ?? "Reshape failed" });
+      throw e;
+    }
   },
 }));
