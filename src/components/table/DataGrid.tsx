@@ -230,7 +230,7 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChan
                   className={cn(
                     "flex items-center gap-2 flex-1 text-left group px-1 py-1 rounded-sm transition-colors duration-75",
                     "hover:bg-foreground/[0.05]",
-                    isSelected && "bg-foreground/[0.06]"
+                    isSelected && "bg-foreground/[0.05]"
                   )}
                   onClick={(e) => toggleColumnSelection(field.name, e)}
                 >
@@ -413,7 +413,7 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChan
     >
       {/* Selection indicator */}
       {selectedColumns.size > 0 && (
-        <div className="sticky top-0 left-0 right-0 z-20 px-3 py-1.5 bg-foreground/[0.06] border-b border-foreground/10 text-[13px] text-foreground flex items-center gap-2">
+        <div className="sticky top-0 left-0 right-0 z-20 px-3 py-1.5 bg-foreground/[0.04] border-b border-foreground/10 text-[13px] text-foreground flex items-center gap-2">
           <Check className="w-3.5 h-3.5" />
           <span className="font-medium">{selectedColumns.size} column{selectedColumns.size > 1 ? 's' : ''} selected</span>
           <span className="text-foreground/50">· Hold Shift/Ctrl/⌘ to multi-select</span>

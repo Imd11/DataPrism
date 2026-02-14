@@ -63,7 +63,7 @@ export const TopToolbar = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+          className="w-7 h-7 text-muted-foreground hover:text-foreground notion-icon-btn"
           onClick={() => setSidebarCollapsed(false)}
         >
           <Menu className="w-4 h-4" />
@@ -90,7 +90,7 @@ export const TopToolbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
+                className="w-7 h-7 text-muted-foreground hover:text-foreground notion-icon-btn"
                 disabled={loading}
                 title="Import options"
               >
@@ -184,7 +184,7 @@ export const TopToolbar = () => {
           variant="ghost" 
           size="icon" 
           className={cn(
-            "w-7 h-7 hover:bg-foreground/[0.06]",
+            "w-7 h-7 notion-icon-btn",
             canUndo ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30"
           )}
           disabled={!canUndo}
@@ -246,14 +246,14 @@ export const TopToolbar = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+          className="w-7 h-7 text-muted-foreground hover:text-foreground notion-icon-btn"
         >
           <Search className="w-3.5 h-3.5" />
         </Button>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+          className="w-7 h-7 text-muted-foreground hover:text-foreground notion-icon-btn"
           onClick={() => setIsDark(!isDark)}
         >
           {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
@@ -261,7 +261,7 @@ export const TopToolbar = () => {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+          className="w-7 h-7 text-muted-foreground hover:text-foreground notion-icon-btn"
         >
           <HelpCircle className="w-3.5 h-3.5" />
         </Button>

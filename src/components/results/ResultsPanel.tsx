@@ -93,13 +93,13 @@ export const ResultsPanel = () => {
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-[13px] text-foreground">Summary: {summary.tableName}</h3>
               <div className="flex gap-0.5">
-                <Button variant="ghost" size="icon" className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]">
+                <Button variant="ghost" size="icon" className="w-6 h-6 text-muted-foreground hover:text-foreground notion-icon-btn">
                   <Copy className="w-3 h-3" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                  className="w-6 h-6 text-muted-foreground hover:text-foreground notion-icon-btn"
                   onClick={() => void exportActiveTable('csv')}
                   title="Export CSV"
                 >
@@ -198,7 +198,7 @@ export const ResultsPanel = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-[11px] gap-1 px-2 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                        className="h-6 text-[11px] gap-1 px-2 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
                         onClick={() => void undoLastOperation()}
                       >
                         <Undo2 className="w-3 h-3" />

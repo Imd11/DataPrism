@@ -159,7 +159,7 @@ export const TableWorkspace = () => {
                   "group h-10 px-4 flex items-center gap-2.5 border-r border-border transition-all duration-75",
                   table.id === activeTableId
                     ? "bg-[hsl(var(--tab-active-background))] text-foreground font-medium shadow-[inset_0_-2px_0_hsl(var(--foreground)/0.8)]"
-                    : "text-[hsl(var(--tab-foreground))] hover:bg-foreground/[0.06] hover:text-foreground"
+                    : "text-[hsl(var(--tab-foreground))] hover:bg-foreground/[0.04] hover:text-foreground"
                 )}
                 onClick={() => setActiveTable(table.id)}
               >

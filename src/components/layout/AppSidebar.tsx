@@ -327,7 +327,7 @@ export const AppSidebar = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+          className="w-7 h-7 text-muted-foreground hover:text-foreground notion-icon-btn"
           onClick={() => setSidebarCollapsed(false)}
         >
           <ChevronRight className="w-4 h-4" />
@@ -343,7 +343,7 @@ export const AppSidebar = () => {
                 "w-7 h-7",
                 project.id === currentProjectId
                   ? "text-foreground bg-foreground/[0.06]"
-                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
               )}
               title={project.name}
               onClick={() => {

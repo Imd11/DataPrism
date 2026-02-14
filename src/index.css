@@ -332,6 +332,23 @@
   .notion-interactive:active {
     background: hsl(var(--foreground) / 0.06);
   }
+
+  /* Unified subtle hover for icon buttons (Notion-like) */
+  .notion-icon-btn {
+    @apply rounded-sm transition-colors duration-75 ease-out;
+  }
+  .notion-icon-btn:hover {
+    background: hsl(var(--foreground) / 0.04);
+  }
+  .notion-icon-btn:active {
+    background: hsl(var(--foreground) / 0.06);
+  }
+
+  /* Subtle focus ring */
+  .notion-focus:focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.35);
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
