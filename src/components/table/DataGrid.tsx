@@ -308,6 +308,10 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChan
                     <DropdownMenuItem onClick={() => handleColumnAction('lowercase')} className="py-2">
                       Convert to lowercase
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleColumnAction('standardize-missing')} className="py-2">
+                      Standardize missing values
+                    </DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
                 

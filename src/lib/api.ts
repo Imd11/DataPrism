@@ -190,6 +190,26 @@ export const api = {
     return requestJson(`/api/projects/${projectId}/history/undo`, { method: "POST" });
   },
 
+  async cleanPreview(
+    projectId: string,
+    tableId: string,
+    input: { action: string; fields: string[]; limit?: number },
+  ): Promise<{
+    tableId: string;
+    action: string;
+    fields: string[];
+    affectedRows: number;
+    affectedCells: number;
+    perField: { field: string; affectedCells: number }[];
+    samples: any[];
+  }> {
+    return requestJson(`/api/projects/${projectId}/tables/${tableId}/clean:preview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...input, limit: input.limit ?? 10 }),
+    });
+  },
+
   async clean(projectId: string, tableId: string, input: { action: string; fields: string[] }): Promise<{ operationId: string; tableId: string; timestamp: string }> {
     return requestJson(`/api/projects/${projectId}/tables/${tableId}/clean`, {
       method: "POST",

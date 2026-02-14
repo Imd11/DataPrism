@@ -1,11 +1,19 @@
-import { X, Table2, Upload } from 'lucide-react';
+import { X, Table2, Upload, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { DataGrid } from './DataGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export const TableWorkspace = () => {
   const { 
@@ -16,6 +24,7 @@ export const TableWorkspace = () => {
     closeTable,
     tableData,
     fetchTableRows,
+    previewCleanColumns,
     cleanColumns,
     setActiveResultTab,
     importDataset,
@@ -29,7 +38,13 @@ export const TableWorkspace = () => {
   const activeTable = tables.find(t => t.id === activeTableId);
   const activeDataState = activeTableId ? tableData[activeTableId] : undefined;
   const activeData = activeDataState?.rows ?? [];
-  
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [pendingAction, setPendingAction] = useState<{ action: string; columns: string[] } | null>(null);
+
   const handleColumnAction = (action: string, columns: string[]) => {
     if (!activeTable) return;
     
@@ -55,6 +70,26 @@ export const TableWorkspace = () => {
         return;
       }
       if (mapping.type === 'clean') {
+        // For high-risk transforms, show a Preview → Apply dialog.
+        if (action === 'standardize-missing') {
+          setPendingAction({ action, columns });
+          setPreviewOpen(true);
+          setPreviewLoading(true);
+          setPreviewError(null);
+          setPreviewData(null);
+          void previewCleanColumns(activeTable.id, action, columns, 10)
+            .then((res) => {
+              setPreviewData(res);
+            })
+            .catch((e: any) => {
+              setPreviewError(e?.message ?? 'Preview failed');
+            })
+            .finally(() => {
+              setPreviewLoading(false);
+            });
+          return;
+        }
+
         void cleanColumns(activeTable.id, action, columns)
           .then(() => {
             toast({
@@ -202,6 +237,102 @@ export const TableWorkspace = () => {
         )}
       </div>
       
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-[720px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-muted-foreground" />
+              Preview change
+            </DialogTitle>
+            <DialogDescription>
+              {pendingAction?.action === 'standardize-missing'
+                ? 'Standardize common missing tokens (e.g., NA, N/A, null, —, empty) to NULL.'
+                : 'Review the impact before applying.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {previewLoading ? (
+            <div className="text-[13px] text-muted-foreground">Loading preview…</div>
+          ) : previewError ? (
+            <div className="text-[13px] text-destructive">{previewError}</div>
+          ) : previewData ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
+                <span>
+                  Affected rows: <span className="text-foreground font-medium tabular-nums">{Number(previewData.affectedRows ?? 0).toLocaleString()}</span>
+                </span>
+                <span>
+                  Affected cells: <span className="text-foreground font-medium tabular-nums">{Number(previewData.affectedCells ?? 0).toLocaleString()}</span>
+                </span>
+              </div>
+
+              <div className="rounded-md border border-border/60 overflow-hidden">
+                <div className="bg-muted/30 px-3 py-2 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  Sample before → after
+                </div>
+                <div className="max-h-[280px] overflow-auto">
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="border-b border-border/60 bg-muted/10">
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Field</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Before</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">After</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(previewData.samples ?? []).flatMap((row: any, idx: number) =>
+                        (pendingAction?.columns ?? []).map((f) => {
+                          const cell = row?.[f];
+                          if (!cell) return null;
+                          return (
+                            <tr key={`${idx}-${f}`} className="border-b border-border/50 last:border-0">
+                              <td className="px-3 py-2 text-muted-foreground">{f}</td>
+                              <td className="px-3 py-2 text-foreground/80">{String(cell.before ?? '')}</td>
+                              <td className="px-3 py-2 text-foreground/80">{cell.after === null ? <span className="text-muted-foreground/60">NULL</span> : String(cell.after ?? '')}</td>
+                            </tr>
+                          );
+                        }).filter(Boolean) as any
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-[13px] text-muted-foreground">No preview available.</div>
+          )}
+
+          <DialogFooter>
+            <button
+              className="h-8 px-3 text-[12px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04] rounded-md"
+              onClick={() => setPreviewOpen(false)}
+              disabled={previewLoading}
+            >
+              Cancel
+            </button>
+            <button
+              className="h-8 px-3 text-[12px] rounded-md bg-primary text-primary-foreground disabled:opacity-50"
+              disabled={previewLoading || !pendingAction || (previewData && Number(previewData.affectedCells ?? 0) === 0)}
+              onClick={() => {
+                if (!activeTable || !pendingAction) return;
+                setPreviewLoading(true);
+                void cleanColumns(activeTable.id, pendingAction.action, pendingAction.columns)
+                  .then(() => {
+                    toast({ title: 'Applied change', description: `${pendingAction.action.replace(/-/g, ' ')} · ${pendingAction.columns.length} column${pendingAction.columns.length > 1 ? 's' : ''}` });
+                    setPreviewOpen(false);
+                  })
+                  .catch((e: any) => {
+                    toast({ title: 'Apply failed', description: e?.message ?? 'Failed', variant: 'destructive' as any });
+                  })
+                  .finally(() => setPreviewLoading(false));
+              }}
+            >
+              Apply
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Status Bar */}
       {activeTable && (
         <div className="h-6 px-3 flex items-center gap-4 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">

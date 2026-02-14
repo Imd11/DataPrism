@@ -97,6 +97,7 @@ interface AppState {
   fetchCharts: (tableId: string, opts?: { kind?: "histogram" | "bar" | "line"; field?: string; valueField?: string | null }) => Promise<void>;
 
   // Actions
+  previewCleanColumns: (tableId: string, action: string, columns: string[], limit?: number) => Promise<any>;
   cleanColumns: (tableId: string, action: string, columns: string[]) => Promise<void>;
   exportActiveTable: (format: "csv" | "dta") => Promise<void>;
   mergeTables: (input: { leftTableId: string; rightTableId: string; leftKeys: string[]; rightKeys: string[]; joinType: "1:1" | "1:m" | "m:1"; how?: "full" | "left" | "right" | "inner"; resultName?: string }) => Promise<any>;
@@ -449,6 +450,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         chartsErrorByTableId: { ...state.chartsErrorByTableId, [tableId]: e?.message ?? "Chart failed" },
       }));
     }
+  },
+
+  previewCleanColumns: async (tableId, action, columns, limit) => {
+    const projectId = get().currentProjectId;
+    if (!projectId) return null;
+    return api.cleanPreview(projectId, tableId, { action, fields: columns, limit });
   },
 
   cleanColumns: async (tableId, action, columns) => {
