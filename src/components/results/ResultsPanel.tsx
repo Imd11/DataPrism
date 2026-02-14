@@ -18,9 +18,9 @@ import { MergePanel } from './MergePanel';
 import { ReshapePanel } from './ReshapePanel';
 
 const tabs = [
-  { id: 'quality', label: 'Quality', icon: AlertTriangle },
   { id: 'summary', label: 'Summary', icon: BarChart3 },
   { id: 'charts', label: 'Charts', icon: PieChart },
+  { id: 'quality', label: 'Quality', icon: AlertTriangle },
   { id: 'merge', label: 'Merge', icon: GitMerge },
   { id: 'reshape', label: 'Reshape', icon: Shuffle },
   { id: 'history', label: 'History', icon: History },
