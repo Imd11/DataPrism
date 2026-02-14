@@ -260,6 +260,22 @@ class CleanOut(BaseModel):
   timestamp: datetime
 
 
+class CleanPreviewIn(BaseModel):
+  action: str
+  fields: list[str]
+  limit: int = 10
+
+
+class CleanPreviewOut(BaseModel):
+  tableId: str
+  action: str
+  fields: list[str]
+  affectedRows: int
+  affectedCells: int
+  perField: list[dict[str, Any]]
+  samples: list[dict[str, Any]]
+
+
 class ChartIn(BaseModel):
   kind: Literal["histogram", "bar", "line"]
   field: str

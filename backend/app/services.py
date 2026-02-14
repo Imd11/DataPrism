@@ -982,6 +982,11 @@ def clean_table(conn: duckdb.DuckDBPyConnection, table_id: str, action: str, fie
                 select_exprs[i] = f"trim({quote_ident(c)}) as {quote_ident(c)}"
             elif action == "lowercase":
                 select_exprs[i] = f"lower(cast({quote_ident(c)} as varchar)) as {quote_ident(c)}"
+            elif action == "standardize-missing":
+                # Convert common "missing tokens" to NULL without changing column types.
+                tok = "lower(trim(cast({col} as varchar)))".format(col=quote_ident(c))
+                cond = f"{quote_ident(c)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999'))"
+                select_exprs[i] = f"case when {cond} then null else {quote_ident(c)} end as {quote_ident(c)}"
             elif action in {"fill-mean", "fill-median"}:
                 duck_t = next(t for (n, t, _) in cols if n == c).upper()
                 if duck_t not in {"INTEGER", "INT", "INT4", "BIGINT", "INT8", "DOUBLE", "FLOAT", "FLOAT8", "REAL", "DECIMAL"}:
@@ -1484,3 +1489,114 @@ def get_history(conn: duckdb.DuckDBPyConnection) -> list[dict[str, Any]]:
             }
         )
     return out
+
+
+def preview_clean(
+    conn: duckdb.DuckDBPyConnection,
+    table_id: str,
+    action: str,
+    fields: list[str],
+    limit: int = 10,
+) -> dict[str, Any]:
+    """Return a best-effort preview of a clean action.
+
+    MVP: currently supports standardize-missing only.
+    """
+    physical = _active_physical_name(conn, table_id)
+    cols = _list_columns(conn, physical)
+    allowed = {c[0] for c in cols}
+    for f in fields:
+        if f not in allowed:
+            raise ValueError(f"Unknown field: {f}")
+
+    if action != "standardize-missing":
+        raise ValueError("Preview not supported for this action yet")
+
+    # per-field affected cell count
+    per_field: list[dict[str, Any]] = []
+    total_cells = 0
+    affected_row_ids: set[int] = set()
+
+    # Use row_number as a stable-ish synthetic row id for preview purposes.
+    # We only use it for counting distinct affected rows.
+    base_query = f"select row_number() over () as __rid, * from {quote_ident(physical)}"
+
+    for f in fields:
+        tok = f"lower(trim(cast({quote_ident(f)} as varchar)))"
+        cond = f"{quote_ident(f)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999'))"
+        cnt = int(conn.execute(f"select count(*) from ({base_query}) t where {cond}").fetchone()[0] or 0)
+        total_cells += cnt
+        per_field.append({"field": f, "affectedCells": cnt})
+
+    # affected rows (any selected field)
+    if fields:
+        conds = []
+        for f in fields:
+            tok = f"lower(trim(cast({quote_ident(f)} as varchar)))"
+            conds.append(f"({quote_ident(f)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999')))" )
+        any_cond = " or ".join(conds) if conds else "false"
+        affected_rows = int(conn.execute(f"select count(*) from ({base_query}) t where {any_cond}").fetchone()[0] or 0)
+    else:
+        affected_rows = 0
+
+    # sample rows
+    samples: list[dict[str, Any]] = []
+    if fields and limit > 0 and affected_rows > 0:
+        conds = []
+        for f in fields:
+            tok = f"lower(trim(cast({quote_ident(f)} as varchar)))"
+            conds.append(f"({quote_ident(f)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999')))" )
+        any_cond = " or ".join(conds)
+        df = conn.execute(
+            f"select * from ({base_query}) t where {any_cond} limit ?",
+            [int(limit)],
+        ).fetchdf()
+        raw = df.to_dict(orient="records")
+        # Normalize pandas/numpy types (reuse helper logic)
+        try:
+            import pandas as _pd  # type: ignore
+            import numpy as _np  # type: ignore
+
+            def _norm(v: Any) -> Any:
+                if v is None:
+                    return None
+                if v is _pd.NaT:
+                    return None
+                if isinstance(v, _pd.Timestamp):
+                    return v.to_pydatetime().isoformat()
+                if isinstance(v, _np.generic):
+                    vv = v.item()
+                    if isinstance(vv, float) and _pd.isna(vv):
+                        return None
+                    return vv
+                if isinstance(v, float) and _pd.isna(v):
+                    return None
+                return v
+
+            raw = [{k: _norm(v) for k, v in r.items()} for r in raw]
+        except Exception:
+            pass
+
+        for r in raw:
+            item = {"__rid": r.get("__rid")}
+            for f in fields:
+                before = r.get(f)
+                # apply same normalization rule for after
+                after = None
+                if before is None:
+                    after = None
+                else:
+                    s = str(before).strip().lower()
+                    after = None if (s == "" or s in {"na","n/a","null","none","nan","-","—","--","?","9999"}) else before
+                item[f] = {"before": before, "after": after}
+            samples.append(item)
+
+    return {
+        "tableId": table_id,
+        "action": action,
+        "fields": fields,
+        "affectedRows": affected_rows,
+        "affectedCells": total_cells,
+        "perField": per_field,
+        "samples": samples,
+    }

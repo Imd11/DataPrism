@@ -13,6 +13,8 @@ from ..schemas import (
   ChartOut,
   CleanIn,
   CleanOut,
+  CleanPreviewIn,
+  CleanPreviewOut,
   CreateRelationIn,
   DataFileOut,
   DataTableOut,
@@ -71,6 +73,7 @@ from ..services import (
   set_primary_key,
   merge_tables,
   undo_last_clean,
+  preview_clean,
 )
 
 
@@ -362,6 +365,18 @@ def clean_drop_missing_route(project_id: str, table_id: str, body: SetPrimaryKey
       refresh_column_profiles(conn, table_id)
       refresh_inferred_relations(conn)
       return res
+    except KeyError:
+      raise HTTPException(status_code=404, detail="Table not found")
+    except ValueError as e:
+      raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/projects/{project_id}/tables/{table_id}/clean:preview", response_model=CleanPreviewOut)
+def clean_preview_route(project_id: str, table_id: str, body: CleanPreviewIn) -> dict:
+  db_path = _ensure_project_exists(project_id)
+  with connect(db_path) as conn:
+    try:
+      return preview_clean(conn, table_id, action=body.action, fields=body.fields, limit=body.limit)
     except KeyError:
       raise HTTPException(status_code=404, detail="Table not found")
     except ValueError as e:
