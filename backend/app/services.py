@@ -1509,32 +1509,37 @@ def preview_clean(
         if f not in allowed:
             raise ValueError(f"Unknown field: {f}")
 
-    if action != "standardize-missing":
+    if action not in {"standardize-missing", "trim", "lowercase"}:
         raise ValueError("Preview not supported for this action yet")
+
+    # Use row_number as a stable-ish synthetic row id for preview purposes.
+    base_query = f"select row_number() over () as __rid, * from {quote_ident(physical)}"
+
+    def _cond_sql(field: str) -> str:
+        ident = quote_ident(field)
+        if action == "standardize-missing":
+            tok = f"lower(trim(cast({ident} as varchar)))"
+            return f"{ident} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999'))"
+        if action == "trim":
+            tok = f"trim(cast({ident} as varchar))"
+            return f"{ident} is not null and cast({ident} as varchar) != {tok}"
+        if action == "lowercase":
+            tok = f"lower(cast({ident} as varchar))"
+            return f"{ident} is not null and cast({ident} as varchar) != {tok}"
+        return "false"
 
     # per-field affected cell count
     per_field: list[dict[str, Any]] = []
     total_cells = 0
-    affected_row_ids: set[int] = set()
-
-    # Use row_number as a stable-ish synthetic row id for preview purposes.
-    # We only use it for counting distinct affected rows.
-    base_query = f"select row_number() over () as __rid, * from {quote_ident(physical)}"
-
     for f in fields:
-        tok = f"lower(trim(cast({quote_ident(f)} as varchar)))"
-        cond = f"{quote_ident(f)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999'))"
+        cond = _cond_sql(f)
         cnt = int(conn.execute(f"select count(*) from ({base_query}) t where {cond}").fetchone()[0] or 0)
         total_cells += cnt
         per_field.append({"field": f, "affectedCells": cnt})
 
     # affected rows (any selected field)
     if fields:
-        conds = []
-        for f in fields:
-            tok = f"lower(trim(cast({quote_ident(f)} as varchar)))"
-            conds.append(f"({quote_ident(f)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999')))" )
-        any_cond = " or ".join(conds) if conds else "false"
+        any_cond = " or ".join([f"({_cond_sql(f)})" for f in fields])
         affected_rows = int(conn.execute(f"select count(*) from ({base_query}) t where {any_cond}").fetchone()[0] or 0)
     else:
         affected_rows = 0
@@ -1542,11 +1547,7 @@ def preview_clean(
     # sample rows
     samples: list[dict[str, Any]] = []
     if fields and limit > 0 and affected_rows > 0:
-        conds = []
-        for f in fields:
-            tok = f"lower(trim(cast({quote_ident(f)} as varchar)))"
-            conds.append(f"({quote_ident(f)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999')))" )
-        any_cond = " or ".join(conds)
+        any_cond = " or ".join([f"({_cond_sql(f)})" for f in fields])
         df = conn.execute(
             f"select * from ({base_query}) t where {any_cond} limit ?",
             [int(limit)],
@@ -1581,13 +1582,18 @@ def preview_clean(
             item = {"__rid": r.get("__rid")}
             for f in fields:
                 before = r.get(f)
-                # apply same normalization rule for after
-                after = None
                 if before is None:
                     after = None
                 else:
-                    s = str(before).strip().lower()
-                    after = None if (s == "" or s in {"na","n/a","null","none","nan","-","—","--","?","9999"}) else before
+                    if action == "standardize-missing":
+                        s = str(before).strip().lower()
+                        after = None if (s == "" or s in {"na","n/a","null","none","nan","-","—","--","?","9999"}) else before
+                    elif action == "trim":
+                        after = str(before).strip()
+                    elif action == "lowercase":
+                        after = str(before).lower()
+                    else:
+                        after = before
                 item[f] = {"before": before, "after": after}
             samples.append(item)
 

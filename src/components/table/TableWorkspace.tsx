@@ -70,8 +70,8 @@ export const TableWorkspace = () => {
         return;
       }
       if (mapping.type === 'clean') {
-        // For high-risk transforms, show a Preview → Apply dialog.
-        if (action === 'standardize-missing') {
+        // For higher-impact transforms, show a Preview → Apply dialog.
+        if (action === 'standardize-missing' || action === 'trim' || action === 'lowercase') {
           setPendingAction({ action, columns });
           setPreviewOpen(true);
           setPreviewLoading(true);
@@ -247,7 +247,11 @@ export const TableWorkspace = () => {
             <DialogDescription>
               {pendingAction?.action === 'standardize-missing'
                 ? 'Standardize common missing tokens (e.g., NA, N/A, null, —, empty) to NULL.'
-                : 'Review the impact before applying.'}
+                : pendingAction?.action === 'trim'
+                  ? 'Trim leading/trailing whitespace.'
+                  : pendingAction?.action === 'lowercase'
+                    ? 'Convert text to lowercase.'
+                    : 'Review the impact before applying.'}
             </DialogDescription>
           </DialogHeader>
 
