@@ -248,8 +248,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       const res = await api.importFile(projectId, file);
       await loadProjectData(projectId, set);
       await get().openTable(res.table.id);
-      // UX: land users in results after import.
-      set({ activeResultTab: "summary", loading: false });
+      // UX: after import, users typically want to check data quality first.
+      set({ activeResultTab: "quality", loading: false });
     } catch (e: any) {
       set({ loading: false, error: e?.message ?? "Import failed" });
     }

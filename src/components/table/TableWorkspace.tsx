@@ -1,8 +1,11 @@
-import { X, Table2 } from 'lucide-react';
+import { X, Table2, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { DataGrid } from './DataGrid';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { useRef } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export const TableWorkspace = () => {
   const { 
@@ -15,9 +18,12 @@ export const TableWorkspace = () => {
     fetchTableRows,
     cleanColumns,
     setActiveResultTab,
+    importDataset,
     error,
     loading,
   } = useAppStore();
+
+  const importRef = useRef<HTMLInputElement | null>(null);
   
   const openTables = tables.filter(t => openTableIds.includes(t.id));
   const activeTable = tables.find(t => t.id === activeTableId);
@@ -49,7 +55,16 @@ export const TableWorkspace = () => {
         return;
       }
       if (mapping.type === 'clean') {
-        void cleanColumns(activeTable.id, action, columns);
+        void cleanColumns(activeTable.id, action, columns)
+          .then(() => {
+            toast({
+              title: 'Applied change',
+              description: `${action.replace(/-/g, ' ')} · ${columns.length} column${columns.length > 1 ? 's' : ''}`,
+            });
+          })
+          .catch(() => {
+            // errors are already surfaced via global error state
+          });
       }
     }
   };
@@ -57,14 +72,53 @@ export const TableWorkspace = () => {
   if (openTables.length === 0) {
     return (
       <div className="h-full flex items-center justify-center bg-background">
-        <div className="text-center">
+        <div className="text-center max-w-[420px] px-6">
           <div className="w-10 h-10 rounded-full bg-foreground/[0.04] flex items-center justify-center mx-auto mb-3">
             <Table2 className="w-5 h-5 text-muted-foreground/50" />
           </div>
-          <p className="text-foreground/70 text-[13px] font-medium">No tables open</p>
-          <p className="text-muted-foreground/60 text-[12px] mt-1">
-            Click a dataset in the sidebar to open it
+          <p className="text-foreground/80 text-[13px] font-medium">Import data. Fix issues. Export clean.</p>
+          <p className="text-muted-foreground/60 text-[12px] mt-1 leading-relaxed">
+            Start with a CSV/XLSX. DataPrism will surface missing values and type issues so you can export confidently.
           </p>
+
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Button
+              size="sm"
+              className="h-8 gap-1.5"
+              onClick={() => importRef.current?.click()}
+              disabled={loading}
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Import dataset
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8"
+              onClick={() => toast({ title: 'Tip', description: 'Use the sidebar to open datasets once imported.' })}
+            >
+              What is a table?
+            </Button>
+          </div>
+
+          <input
+            ref={importRef}
+            type="file"
+            className="hidden"
+            accept=".csv,.xlsx,.xls"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              void importDataset(f);
+              e.currentTarget.value = '';
+            }}
+          />
+
+          {error && (
+            <div className="mt-3 text-[12px] text-destructive/90" title={error}>
+              {error}
+            </div>
+          )}
         </div>
       </div>
     );

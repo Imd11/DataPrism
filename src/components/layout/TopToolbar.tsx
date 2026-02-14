@@ -29,6 +29,7 @@ export const TopToolbar = () => {
     projects,
     currentProjectId,
     setCurrentProject,
+    activeTableId,
     operationHistory,
     undoLastOperation,
     exportActiveTable,
@@ -45,6 +46,7 @@ export const TopToolbar = () => {
   const currentProject = projects.find(p => p.id === currentProjectId);
   
   const canUndo = operationHistory.some(op => op.undoable);
+  const canExport = Boolean(activeTableId) && !loading;
   
   useEffect(() => {
     if (isDark) {
@@ -70,38 +72,52 @@ export const TopToolbar = () => {
       
       {/* Left Section - Actions */}
       <div className="flex items-center gap-0.5">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Import</span>
-              <ChevronDown className="w-3 h-3 ml-0.5 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56 notion-popover-shadow">
-            <DropdownMenuItem
-              className="py-2"
-              onSelect={(e) => {
-                e.preventDefault();
-                importThisRef.current?.click();
-              }}
-            >
-              Import into this project…
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="py-2"
-              onSelect={(e) => {
-                e.preventDefault();
-                importNewProjectRef.current?.click();
-              }}
-            >
-              Import as new project…
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+            onClick={() => importThisRef.current?.click()}
+            disabled={loading}
+            title="Import a dataset"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Import</span>
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                disabled={loading}
+                title="Import options"
+              >
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 notion-popover-shadow">
+              <DropdownMenuItem
+                className="py-2"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  importThisRef.current?.click();
+                }}
+              >
+                Import into this project…
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="py-2"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  importNewProjectRef.current?.click();
+                }}
+              >
+                Import as new project…
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <input
             ref={importThisRef}
@@ -127,14 +143,21 @@ export const TopToolbar = () => {
               e.currentTarget.value = "";
             }}
           />
-        </DropdownMenu>
+        </div>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
               size="sm" 
-              className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+              className={cn(
+                "h-7 gap-1.5 px-2.5 text-[13px]",
+                canExport
+                  ? "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                  : "text-muted-foreground/30"
+              )}
+              disabled={!canExport}
+              title={canExport ? "Export the active table" : "Open a table to export"}
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export</span>

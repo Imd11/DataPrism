@@ -371,7 +371,7 @@ export const AppSidebar = () => {
           <div className="w-5 h-5 rounded bg-foreground/90 flex items-center justify-center">
             <span className="text-background text-[10px] font-semibold">L</span>
           </div>
-          <span className="font-medium text-[13px] text-foreground tracking-tight">LinkData</span>
+          <span className="font-medium text-[13px] text-foreground tracking-tight">DataPrism</span>
         </div>
         <Button
           variant="ghost"

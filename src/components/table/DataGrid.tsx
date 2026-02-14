@@ -416,7 +416,7 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChan
         <div className="sticky top-0 left-0 right-0 z-20 px-3 py-1.5 bg-foreground/[0.06] border-b border-foreground/10 text-[13px] text-foreground flex items-center gap-2">
           <Check className="w-3.5 h-3.5" />
           <span className="font-medium">{selectedColumns.size} column{selectedColumns.size > 1 ? 's' : ''} selected</span>
-          <span className="text-foreground/50">· Hold Shift or ⌘ to multi-select</span>
+          <span className="text-foreground/50">· Hold Shift/Ctrl/⌘ to multi-select</span>
           <button 
             className="ml-auto text-[13px] hover:underline underline-offset-2"
             onClick={() => setSelectedColumns(new Set())}
