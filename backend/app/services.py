@@ -580,11 +580,41 @@ def query_rows(
     order_sql = f"order by {', '.join(order_parts)}" if order_parts else ""
 
     total = int(conn.execute(f"select count(*) from {quote_ident(physical)} {where_sql}", params).fetchone()[0])
-    rows = conn.execute(
+    df = conn.execute(
         f"select * from {quote_ident(physical)} {where_sql} {order_sql} limit ? offset ?",
         [*params, limit, offset],
     ).fetchdf()
-    return rows.to_dict(orient="records"), total
+
+    # FastAPI/Pydantic serialization can choke on pandas/numpy scalar types.
+    # Normalize to plain Python types (datetime, int/float/str/bool/None).
+    rows: list[dict[str, Any]] = df.to_dict(orient="records")
+    try:
+        import pandas as _pd  # type: ignore
+        import numpy as _np  # type: ignore
+
+        def _norm(v: Any) -> Any:
+            if v is None:
+                return None
+            # pandas missing
+            if v is _pd.NaT:
+                return None
+            # pandas Timestamp -> python datetime
+            if isinstance(v, _pd.Timestamp):
+                return v.to_pydatetime()
+            # numpy scalar -> python scalar
+            if isinstance(v, _np.generic):
+                return v.item()
+            # NaN -> None (keep consistent with null semantics)
+            if isinstance(v, float) and _pd.isna(v):
+                return None
+            return v
+
+        rows = [{k: _norm(v) for k, v in r.items()} for r in rows]
+    except Exception:
+        # Best-effort normalization; if deps missing, return raw.
+        pass
+
+    return rows, total
 
 
 def compute_summary(conn: duckdb.DuckDBPyConnection, table_id: str) -> dict[str, Any]:
