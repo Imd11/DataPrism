@@ -366,17 +366,17 @@ export const AppSidebar = () => {
       className="h-full bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-sidebar-border">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-sidebar-border/60">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-foreground/90 flex items-center justify-center">
-            <span className="text-background text-[10px] font-semibold">L</span>
+          <div className="w-5 h-5 rounded-md bg-foreground/[0.06] border border-border/60 flex items-center justify-center">
+            <span className="text-foreground text-[10px] font-semibold">D</span>
           </div>
           <span className="font-medium text-[13px] text-foreground tracking-tight">DataPrism</span>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+          className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
           onClick={() => setSidebarCollapsed(true)}
         >
           <ChevronLeft className="w-3.5 h-3.5" />

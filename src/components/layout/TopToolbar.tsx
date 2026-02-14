@@ -57,7 +57,7 @@ export const TopToolbar = () => {
   }, [isDark]);
   
   return (
-    <div className="h-11 bg-background border-b border-border flex items-center px-2 gap-1">
+    <div className="h-10 bg-background border-b border-border/60 flex items-center px-2 gap-1">
       {/* Sidebar Toggle */}
       {sidebarCollapsed && (
         <Button
@@ -76,7 +76,7 @@ export const TopToolbar = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+            className="h-7 gap-1.5 px-2.5 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
             onClick={() => importThisRef.current?.click()}
             disabled={loading}
             title="Import a dataset"
@@ -90,7 +90,7 @@ export const TopToolbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
                 disabled={loading}
                 title="Import options"
               >
@@ -153,7 +153,7 @@ export const TopToolbar = () => {
               className={cn(
                 "h-7 gap-1.5 px-2.5 text-[13px]",
                 canExport
-                  ? "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                  ? "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
                   : "text-muted-foreground/30"
               )}
               disabled={!canExport}
@@ -188,6 +188,7 @@ export const TopToolbar = () => {
             canUndo ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/30"
           )}
           disabled={!canUndo}
+          title={canUndo ? "Undo" : "Nothing to undo"}
           onClick={() => void undoLastOperation()}
         >
           <Undo2 className="w-3.5 h-3.5" />

@@ -435,12 +435,12 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChan
       >
         <thead className="sticky top-0 z-10">
           {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id} className="bg-table-header border-b border-table-border">
+            <tr key={headerGroup.id} className="bg-table-header border-b border-table-border/60">
               {headerGroup.headers.map(header => (
                 <th
                   key={header.id}
                   className={cn(
-                    "px-2 py-2 text-left text-[13px] font-normal whitespace-nowrap border-r border-table-border last:border-r-0 relative",
+                    "px-2 py-2 text-left text-[13px] font-normal whitespace-nowrap border-r border-table-border/50 last:border-r-0 relative",
                     selectedColumns.has(header.column.id) && "bg-foreground/[0.03]"
                   )}
                   style={{ 
@@ -472,7 +472,7 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChan
               <tr
                 key={row.id}
                 className={cn(
-                  "border-b border-table-border transition-colors duration-75",
+                  "border-b border-table-border/50 transition-colors duration-75",
                   "hover:bg-table-row-hover",
                   row.getIsSelected() && "bg-table-row-selected"
                 )}
@@ -481,7 +481,7 @@ export const DataGrid = ({ data, fields, onCellClick, onColumnAction, onSortChan
                   <td
                     key={cell.id}
                     className={cn(
-                      "px-3 py-1.5 text-[13px] whitespace-nowrap border-r border-table-border last:border-r-0 overflow-hidden",
+                      "px-3 py-1.5 text-[13px] whitespace-nowrap border-r border-table-border/50 last:border-r-0 overflow-hidden",
                       selectedColumns.has(cell.column.id) && "bg-foreground/[0.02]"
                     )}
                     style={{

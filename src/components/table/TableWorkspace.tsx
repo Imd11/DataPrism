@@ -72,16 +72,17 @@ export const TableWorkspace = () => {
   if (openTables.length === 0) {
     return (
       <div className="h-full flex items-center justify-center bg-background">
-        <div className="text-center max-w-[420px] px-6">
+        <div className="text-center max-w-[520px] px-6">
           <div className="w-10 h-10 rounded-full bg-foreground/[0.04] flex items-center justify-center mx-auto mb-3">
             <Table2 className="w-5 h-5 text-muted-foreground/50" />
           </div>
-          <p className="text-foreground/80 text-[13px] font-medium">Import data. Fix issues. Export clean.</p>
-          <p className="text-muted-foreground/60 text-[12px] mt-1 leading-relaxed">
-            Start with a CSV/XLSX. DataPrism will surface missing values and type issues so you can export confidently.
-          </p>
+          <div className="mx-auto rounded-xl border border-border/60 bg-card notion-shadow-md p-6">
+            <p className="text-foreground text-[13px] font-semibold">Import data. Fix issues. Export clean.</p>
+            <p className="text-muted-foreground/70 text-[12px] mt-1 leading-relaxed">
+              Start with a CSV/XLSX. DataPrism will surface missing values and type issues so you can export confidently.
+            </p>
 
-          <div className="mt-4 flex items-center justify-center gap-2">
+            <div className="mt-4 flex items-center justify-center gap-2">
             <Button
               size="sm"
               className="h-8 gap-1.5"
@@ -114,11 +115,27 @@ export const TableWorkspace = () => {
             }}
           />
 
-          {error && (
-            <div className="mt-3 text-[12px] text-destructive/90" title={error}>
-              {error}
+            <div className="mt-5 text-left text-[12px] text-muted-foreground/70">
+              <div className="flex items-center gap-2 py-1">
+                <span className="w-4 text-muted-foreground/60">1.</span>
+                <span>Import a dataset</span>
+              </div>
+              <div className="flex items-center gap-2 py-1">
+                <span className="w-4 text-muted-foreground/60">2.</span>
+                <span>Review <span className="text-foreground/80 font-medium">Quality</span> (missing values, types)</span>
+              </div>
+              <div className="flex items-center gap-2 py-1">
+                <span className="w-4 text-muted-foreground/60">3.</span>
+                <span>Export clean data (.dta / CSV)</span>
+              </div>
             </div>
-          )}
+
+            {error && (
+              <div className="mt-3 text-[12px] text-destructive/90" title={error}>
+                {error}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

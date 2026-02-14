@@ -64,10 +64,10 @@ export const ResultsPanel = () => {
             key={tab.id}
             onClick={() => setActiveResultTab(tab.id)}
             className={cn(
-              "h-7 px-2.5 flex items-center gap-1.5 rounded-sm text-[13px] font-medium transition-colors duration-75 whitespace-nowrap",
+              "h-7 px-2.5 flex items-center gap-1.5 rounded-md text-[13px] font-medium transition-colors duration-75 whitespace-nowrap",
               activeResultTab === tab.id
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                ? "bg-foreground/[0.06] text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]"
             )}
           >
             <tab.icon className="w-3.5 h-3.5" />
