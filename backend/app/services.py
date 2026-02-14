@@ -954,7 +954,13 @@ def clean_drop_missing(conn: duckdb.DuckDBPyConnection, table_id: str, fields: l
     return clean_table(conn, table_id, action="drop-missing", fields=fields)
 
 
-def clean_table(conn: duckdb.DuckDBPyConnection, table_id: str, action: str, fields: list[str]) -> dict[str, Any]:
+def clean_table(
+    conn: duckdb.DuckDBPyConnection,
+    table_id: str,
+    action: str,
+    fields: list[str],
+    filters: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     physical = _active_physical_name(conn, table_id)
     cols = _list_columns(conn, physical)
     col_names = [c[0] for c in cols]
@@ -966,10 +972,42 @@ def clean_table(conn: duckdb.DuckDBPyConnection, table_id: str, action: str, fie
     new_ver = _next_version(conn, table_id)
     new_physical = _physical_name(table_id, new_ver)
 
+    # Optional row scope (Scoped Apply)
+    filters = filters or []
+    where_parts: list[str] = []
+    where_params: list[Any] = []
+    if filters:
+        # Reuse the same filter semantics as query_rows
+        for f in filters:
+            field = f["field"]
+            if field not in allowed:
+                raise ValueError(f"Unknown field: {field}")
+            op = f["op"]
+            if op == "isnull":
+                where_parts.append(f"{quote_ident(field)} is null")
+            elif op == "notnull":
+                where_parts.append(f"{quote_ident(field)} is not null")
+            elif op == "contains":
+                where_parts.append(f"{quote_ident(field)} ilike ?")
+                where_params.append(f"%{f.get('value','')}%")
+            elif op == "eq":
+                where_parts.append(f"{quote_ident(field)} = ?")
+                where_params.append(f.get("value"))
+            elif op == "neq":
+                where_parts.append(f"{quote_ident(field)} != ?")
+                where_params.append(f.get("value"))
+            else:
+                raise ValueError(f"Unsupported filter op for clean: {op}")
+
+    scope_sql = f"({' and '.join(where_parts)})" if where_parts else "true"
+
     where_sql = ""
     select_exprs: list[str] = []
 
     if action == "drop-missing":
+        # Scoped drop-missing is not supported in MVP (would require row-wise merge of kept/dropped sets).
+        if where_parts:
+            raise ValueError("Scoped apply is not supported for drop-missing")
         pred = " and ".join([f"{quote_ident(f)} is not null" for f in fields]) or "true"
         where_sql = f"where {pred}"
         select_exprs = [quote_ident(c) for c in col_names]
@@ -979,15 +1017,20 @@ def clean_table(conn: duckdb.DuckDBPyConnection, table_id: str, action: str, fie
             if c not in fields:
                 continue
             if action == "trim":
-                select_exprs[i] = f"trim({quote_ident(c)}) as {quote_ident(c)}"
+                expr = f"trim({quote_ident(c)})"
+                select_exprs[i] = f"case when {scope_sql} then {expr} else {quote_ident(c)} end as {quote_ident(c)}"
             elif action == "lowercase":
-                select_exprs[i] = f"lower(cast({quote_ident(c)} as varchar)) as {quote_ident(c)}"
+                expr = f"lower(cast({quote_ident(c)} as varchar))"
+                select_exprs[i] = f"case when {scope_sql} then {expr} else {quote_ident(c)} end as {quote_ident(c)}"
             elif action == "standardize-missing":
-                # Convert common "missing tokens" to NULL without changing column types.
                 tok = "lower(trim(cast({col} as varchar)))".format(col=quote_ident(c))
                 cond = f"{quote_ident(c)} is not null and ({tok} = '' or {tok} in ('na','n/a','null','none','nan','-','—','--','?','9999'))"
-                select_exprs[i] = f"case when {cond} then null else {quote_ident(c)} end as {quote_ident(c)}"
+                expr = f"case when {cond} then null else {quote_ident(c)} end"
+                select_exprs[i] = f"case when {scope_sql} then {expr} else {quote_ident(c)} end as {quote_ident(c)}"
             elif action in {"fill-mean", "fill-median"}:
+                # MVP: scoped fill not supported yet.
+                if where_parts:
+                    raise ValueError("Scoped apply is not supported for this action")
                 duck_t = next(t for (n, t, _) in cols if n == c).upper()
                 if duck_t not in {"INTEGER", "INT", "INT4", "BIGINT", "INT8", "DOUBLE", "FLOAT", "FLOAT8", "REAL", "DECIMAL"}:
                     raise ValueError(f"{action} only supports numeric columns: {c}")
@@ -1017,7 +1060,7 @@ def clean_table(conn: duckdb.DuckDBPyConnection, table_id: str, action: str, fie
 
     conn.execute(
         f"create table {quote_ident(new_physical)} as select {', '.join(select_exprs)} from {quote_ident(physical)} {where_sql}",
-        params,
+        [*where_params, *params],
     )
 
     prev_version_row = conn.execute(
@@ -1496,6 +1539,7 @@ def preview_clean(
     table_id: str,
     action: str,
     fields: list[str],
+    filters: list[dict[str, Any]] | None = None,
     limit: int = 10,
 ) -> dict[str, Any]:
     """Return a best-effort preview of a clean action.
@@ -1515,6 +1559,34 @@ def preview_clean(
     # Use row_number as a stable-ish synthetic row id for preview purposes.
     base_query = f"select row_number() over () as __rid, * from {quote_ident(physical)}"
 
+    # Optional scope filters
+    filters = filters or []
+    scope_parts: list[str] = []
+    scope_params: list[Any] = []
+    if filters:
+        for f in filters:
+            field = f["field"]
+            if field not in allowed:
+                raise ValueError(f"Unknown field: {field}")
+            op = f["op"]
+            if op == "isnull":
+                scope_parts.append(f"{quote_ident(field)} is null")
+            elif op == "notnull":
+                scope_parts.append(f"{quote_ident(field)} is not null")
+            elif op == "contains":
+                scope_parts.append(f"{quote_ident(field)} ilike ?")
+                scope_params.append(f"%{f.get('value','')}%")
+            elif op == "eq":
+                scope_parts.append(f"{quote_ident(field)} = ?")
+                scope_params.append(f.get("value"))
+            elif op == "neq":
+                scope_parts.append(f"{quote_ident(field)} != ?")
+                scope_params.append(f.get("value"))
+            else:
+                raise ValueError(f"Unsupported filter op for preview: {op}")
+
+    scope_sql = f"({' and '.join(scope_parts)})" if scope_parts else "true"
+
     def _cond_sql(field: str) -> str:
         ident = quote_ident(field)
         if action == "standardize-missing":
@@ -1533,14 +1605,14 @@ def preview_clean(
     total_cells = 0
     for f in fields:
         cond = _cond_sql(f)
-        cnt = int(conn.execute(f"select count(*) from ({base_query}) t where {cond}").fetchone()[0] or 0)
+        cnt = int(conn.execute(f"select count(*) from ({base_query}) t where {scope_sql} and {cond}", scope_params).fetchone()[0] or 0)
         total_cells += cnt
         per_field.append({"field": f, "affectedCells": cnt})
 
     # affected rows (any selected field)
     if fields:
         any_cond = " or ".join([f"({_cond_sql(f)})" for f in fields])
-        affected_rows = int(conn.execute(f"select count(*) from ({base_query}) t where {any_cond}").fetchone()[0] or 0)
+        affected_rows = int(conn.execute(f"select count(*) from ({base_query}) t where {scope_sql} and ({any_cond})", scope_params).fetchone()[0] or 0)
     else:
         affected_rows = 0
 
@@ -1549,8 +1621,8 @@ def preview_clean(
     if fields and limit > 0 and affected_rows > 0:
         any_cond = " or ".join([f"({_cond_sql(f)})" for f in fields])
         df = conn.execute(
-            f"select * from ({base_query}) t where {any_cond} limit ?",
-            [int(limit)],
+            f"select * from ({base_query}) t where {scope_sql} and ({any_cond}) limit ?",
+            [*scope_params, int(limit)],
         ).fetchdf()
         raw = df.to_dict(orient="records")
         # Normalize pandas/numpy types (reuse helper logic)

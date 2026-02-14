@@ -193,7 +193,7 @@ export const api = {
   async cleanPreview(
     projectId: string,
     tableId: string,
-    input: { action: string; fields: string[]; limit?: number },
+    input: { action: string; fields: string[]; filters?: any[]; limit?: number },
   ): Promise<{
     tableId: string;
     action: string;
@@ -206,15 +206,24 @@ export const api = {
     return requestJson(`/api/projects/${projectId}/tables/${tableId}/clean:preview`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...input, limit: input.limit ?? 10 }),
+      body: JSON.stringify({
+        action: input.action,
+        fields: input.fields,
+        filters: input.filters ?? [],
+        limit: input.limit ?? 10,
+      }),
     });
   },
 
-  async clean(projectId: string, tableId: string, input: { action: string; fields: string[] }): Promise<{ operationId: string; tableId: string; timestamp: string }> {
+  async clean(
+    projectId: string,
+    tableId: string,
+    input: { action: string; fields: string[]; filters?: any[] },
+  ): Promise<{ operationId: string; tableId: string; timestamp: string }> {
     return requestJson(`/api/projects/${projectId}/tables/${tableId}/clean`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ action: input.action, fields: input.fields, filters: input.filters ?? [] }),
     });
   },
 

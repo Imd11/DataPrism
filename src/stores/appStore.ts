@@ -97,8 +97,8 @@ interface AppState {
   fetchCharts: (tableId: string, opts?: { kind?: "histogram" | "bar" | "line"; field?: string; valueField?: string | null }) => Promise<void>;
 
   // Actions
-  previewCleanColumns: (tableId: string, action: string, columns: string[], limit?: number) => Promise<any>;
-  cleanColumns: (tableId: string, action: string, columns: string[]) => Promise<void>;
+  previewCleanColumns: (tableId: string, action: string, columns: string[], limit?: number, filters?: any[]) => Promise<any>;
+  cleanColumns: (tableId: string, action: string, columns: string[], filters?: any[]) => Promise<void>;
   exportActiveTable: (format: "csv" | "dta") => Promise<void>;
   mergeTables: (input: { leftTableId: string; rightTableId: string; leftKeys: string[]; rightKeys: string[]; joinType: "1:1" | "1:m" | "m:1"; how?: "full" | "left" | "right" | "inner"; resultName?: string }) => Promise<any>;
   reshapeTable: (input: { tableId: string; direction: "wide-to-long" | "long-to-wide"; idVars: string[]; valueVars: string[]; variableName?: string; valueName?: string; pivotColumns?: string; pivotValues?: string; resultName?: string }) => Promise<any>;
@@ -452,16 +452,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  previewCleanColumns: async (tableId, action, columns, limit) => {
+  previewCleanColumns: async (tableId, action, columns, limit, filters) => {
     const projectId = get().currentProjectId;
     if (!projectId) return null;
-    return api.cleanPreview(projectId, tableId, { action, fields: columns, limit });
+    return api.cleanPreview(projectId, tableId, { action, fields: columns, limit, filters: filters ?? [] });
   },
 
-  cleanColumns: async (tableId, action, columns) => {
+  cleanColumns: async (tableId, action, columns, filters) => {
     const projectId = get().currentProjectId;
     if (!projectId) return;
-    await api.clean(projectId, tableId, { action, fields: columns });
+    await api.clean(projectId, tableId, { action, fields: columns, filters: filters ?? [] });
     await loadProjectData(projectId, set);
     await get().fetchTableRows(tableId, { offset: 0 });
     await get().refreshHistory();

@@ -45,6 +45,16 @@ export const TableWorkspace = () => {
   const [previewData, setPreviewData] = useState<any>(null);
   const [pendingAction, setPendingAction] = useState<{ action: string; columns: string[] } | null>(null);
 
+  // Scoped Apply (MVP): single filter rule
+  const [scopeEnabled, setScopeEnabled] = useState(false);
+  const [scopeField, setScopeField] = useState<string>('');
+  const [scopeOp, setScopeOp] = useState<'eq' | 'contains' | 'isnull' | 'notnull'>('contains');
+  const [scopeValue, setScopeValue] = useState<string>('');
+
+  const previewFilters = scopeEnabled && scopeField
+    ? [{ field: scopeField, op: scopeOp, value: (scopeOp === 'isnull' || scopeOp === 'notnull') ? null : scopeValue }]
+    : [];
+
   const handleColumnAction = (action: string, columns: string[]) => {
     if (!activeTable) return;
     
@@ -77,7 +87,7 @@ export const TableWorkspace = () => {
           setPreviewLoading(true);
           setPreviewError(null);
           setPreviewData(null);
-          void previewCleanColumns(activeTable.id, action, columns, 10)
+          void previewCleanColumns(activeTable.id, action, columns, 10, previewFilters)
             .then((res) => {
               setPreviewData(res);
             })
@@ -270,6 +280,73 @@ export const TableWorkspace = () => {
                 </span>
               </div>
 
+              <div className="rounded-md border border-border/60 p-3 bg-muted/10">
+                <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Scope</div>
+                <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    className="accent-[hsl(var(--primary))]"
+                    checked={scopeEnabled}
+                    onChange={(e) => setScopeEnabled(e.target.checked)}
+                  />
+                  Apply only to rows matching a filter
+                </label>
+
+                {scopeEnabled && activeTable && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <select
+                      className="h-8 rounded-md border border-border bg-background px-2 text-[12px]"
+                      value={scopeField}
+                      onChange={(e) => setScopeField(e.target.value)}
+                      title="Field"
+                    >
+                      <option value="">Select field…</option>
+                      {activeTable.fields.map((f) => (
+                        <option key={f.name} value={f.name}>{f.name}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="h-8 rounded-md border border-border bg-background px-2 text-[12px]"
+                      value={scopeOp}
+                      onChange={(e) => setScopeOp(e.target.value as any)}
+                      title="Operator"
+                    >
+                      <option value="contains">contains</option>
+                      <option value="eq">equals</option>
+                      <option value="isnull">is null</option>
+                      <option value="notnull">not null</option>
+                    </select>
+
+                    {scopeOp !== 'isnull' && scopeOp !== 'notnull' && (
+                      <input
+                        className="h-8 w-[220px] rounded-md border border-border bg-background px-2 text-[12px]"
+                        value={scopeValue}
+                        onChange={(e) => setScopeValue(e.target.value)}
+                        placeholder="value…"
+                      />
+                    )}
+
+                    <button
+                      className="h-8 px-3 text-[12px] rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      disabled={!pendingAction || !activeTable}
+                      onClick={() => {
+                        if (!pendingAction || !activeTable) return;
+                        setPreviewLoading(true);
+                        setPreviewError(null);
+                        setPreviewData(null);
+                        void previewCleanColumns(activeTable.id, pendingAction.action, pendingAction.columns, 10, previewFilters)
+                          .then((res) => setPreviewData(res))
+                          .catch((e: any) => setPreviewError(e?.message ?? 'Preview failed'))
+                          .finally(() => setPreviewLoading(false));
+                      }}
+                    >
+                      Refresh preview
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="rounded-md border border-border/60 overflow-hidden">
                 <div className="bg-muted/30 px-3 py-2 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                   Sample before → after
@@ -320,7 +397,7 @@ export const TableWorkspace = () => {
               onClick={() => {
                 if (!activeTable || !pendingAction) return;
                 setPreviewLoading(true);
-                void cleanColumns(activeTable.id, pendingAction.action, pendingAction.columns)
+                void cleanColumns(activeTable.id, pendingAction.action, pendingAction.columns, previewFilters)
                   .then(() => {
                     toast({ title: 'Applied change', description: `${pendingAction.action.replace(/-/g, ' ')} · ${pendingAction.columns.length} column${pendingAction.columns.length > 1 ? 's' : ''}` });
                     setPreviewOpen(false);

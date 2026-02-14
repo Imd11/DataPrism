@@ -376,7 +376,7 @@ def clean_preview_route(project_id: str, table_id: str, body: CleanPreviewIn) ->
   db_path = _ensure_project_exists(project_id)
   with connect(db_path) as conn:
     try:
-      return preview_clean(conn, table_id, action=body.action, fields=body.fields, limit=body.limit)
+      return preview_clean(conn, table_id, action=body.action, fields=body.fields, filters=[f.model_dump() for f in body.filters], limit=body.limit)
     except KeyError:
       raise HTTPException(status_code=404, detail="Table not found")
     except ValueError as e:
@@ -388,7 +388,7 @@ def clean_route(project_id: str, table_id: str, body: CleanIn) -> dict:
   db_path = _ensure_project_exists(project_id)
   with connect(db_path) as conn:
     try:
-      res = clean_table(conn, table_id, action=body.action, fields=body.fields)
+      res = clean_table(conn, table_id, action=body.action, fields=body.fields, filters=[f.model_dump() for f in body.filters])
       refresh_column_profiles(conn, table_id)
       refresh_inferred_relations(conn)
       return res

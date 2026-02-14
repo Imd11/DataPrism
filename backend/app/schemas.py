@@ -250,8 +250,9 @@ class ExportOut(BaseModel):
 
 
 class CleanIn(BaseModel):
-  action: Literal["drop-missing", "fill-mean", "fill-median", "trim", "lowercase"]
+  action: Literal["drop-missing", "fill-mean", "fill-median", "trim", "lowercase", "standardize-missing"]
   fields: list[str]
+  filters: list[FilterSpec] = Field(default_factory=list)
 
 
 class CleanOut(BaseModel):
@@ -263,6 +264,7 @@ class CleanOut(BaseModel):
 class CleanPreviewIn(BaseModel):
   action: str
   fields: list[str]
+  filters: list[FilterSpec] = Field(default_factory=list)
   limit: int = 10
 
 
