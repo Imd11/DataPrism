@@ -39,6 +39,7 @@ export const ResultsPanel = () => {
     fetchQuality,
     exportActiveTable,
     undoLastOperation,
+    setCleanPreviewIntent,
   } = useAppStore();
 
   const activeTable = tables.find(t => t.id === activeTableId);
@@ -156,6 +157,32 @@ export const ResultsPanel = () => {
         {activeResultTab === 'quality' && quality && (
           <div className="space-y-4">
             <h3 className="font-medium text-[13px] text-foreground">Quality Report: {quality.tableName}</h3>
+
+            {/* Suggested fixes (task cards) */}
+            {activeTable && (
+              <div className="rounded-md border border-border/60 bg-background p-3">
+                <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Suggested fixes</div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="text-[12px] text-muted-foreground leading-relaxed">
+                    Standardize common missing tokens (e.g., NA, N/A, null, —, empty) so downstream cleaning behaves consistently.
+                  </div>
+                  <Button
+                    size="sm"
+                    className="h-7 text-[12px]"
+                    onClick={() => {
+                      const cols = activeTable.fields
+                        .filter((f) => ['varchar', 'text', 'string'].includes(String(f.type)))
+                        .map((f) => f.name);
+                      setCleanPreviewIntent({ action: 'standardize-missing', columns: cols });
+                    }}
+                    disabled={activeTable.fields.length === 0}
+                  >
+                    Preview fix
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-md border border-border bg-muted/20">
                 <div className="text-2xl font-semibold text-foreground tabular-nums">{quality.totalRows.toLocaleString()}</div>

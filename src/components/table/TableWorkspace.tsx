@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores/appStore';
 import { DataGrid } from './DataGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -24,6 +24,8 @@ export const TableWorkspace = () => {
     closeTable,
     tableData,
     fetchTableRows,
+    cleanPreviewIntent,
+    setCleanPreviewIntent,
     previewCleanColumns,
     cleanColumns,
     setActiveResultTab,
@@ -54,6 +56,16 @@ export const TableWorkspace = () => {
   const previewFilters = scopeEnabled && scopeField
     ? [{ field: scopeField, op: scopeOp, value: (scopeOp === 'isnull' || scopeOp === 'notnull') ? null : scopeValue }]
     : [];
+
+  // Allow ResultsPanel (Quality task cards) to trigger preview.
+  useEffect(() => {
+    if (!cleanPreviewIntent) return;
+    if (!activeTable) return;
+
+    handleColumnAction(cleanPreviewIntent.action, cleanPreviewIntent.columns);
+    setCleanPreviewIntent(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cleanPreviewIntent, activeTableId]);
 
   const handleColumnAction = (action: string, columns: string[]) => {
     if (!activeTable) return;

@@ -96,6 +96,10 @@ interface AppState {
   fetchQuality: (tableId: string) => Promise<void>;
   fetchCharts: (tableId: string, opts?: { kind?: "histogram" | "bar" | "line"; field?: string; valueField?: string | null }) => Promise<void>;
 
+  // Clean preview intent (cross-panel)
+  cleanPreviewIntent: { action: string; columns: string[] } | null;
+  setCleanPreviewIntent: (intent: { action: string; columns: string[] } | null) => void;
+
   // Actions
   previewCleanColumns: (tableId: string, action: string, columns: string[], limit?: number, filters?: any[]) => Promise<any>;
   cleanColumns: (tableId: string, action: string, columns: string[], filters?: any[]) => Promise<void>;
@@ -451,6 +455,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       }));
     }
   },
+
+  cleanPreviewIntent: null,
+  setCleanPreviewIntent: (intent) => set({ cleanPreviewIntent: intent }),
 
   previewCleanColumns: async (tableId, action, columns, limit, filters) => {
     const projectId = get().currentProjectId;
