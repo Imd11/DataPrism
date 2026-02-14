@@ -320,7 +320,7 @@ export const AppSidebar = () => {
   if (sidebarCollapsed) {
     return (
       <motion.div
-        initial={{ width: 0 }}
+        initial={false}
         animate={{ width: 44 }}
         className="h-full bg-sidebar border-r border-sidebar-border flex flex-col items-center py-3"
       >
@@ -361,7 +361,7 @@ export const AppSidebar = () => {
 
   return (
     <motion.div
-      initial={{ width: 0 }}
+      initial={false}
       animate={{ width: 260 }}
       className="h-full bg-sidebar border-r border-sidebar-border flex flex-col overflow-hidden"
     >
