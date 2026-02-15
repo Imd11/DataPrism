@@ -12,10 +12,22 @@ import {
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/stores/appStore';
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
-import { ChartsView } from './ChartsView';
-import { MergePanel } from './MergePanel';
-import { ReshapePanel } from './ReshapePanel';
+import { useEffect, Suspense, lazy } from 'react';
+
+const LazyChartsView = lazy(async () => {
+  const mod = await import('./ChartsView');
+  return { default: mod.ChartsView };
+});
+
+const LazyMergePanel = lazy(async () => {
+  const mod = await import('./MergePanel');
+  return { default: mod.MergePanel };
+});
+
+const LazyReshapePanel = lazy(async () => {
+  const mod = await import('./ReshapePanel');
+  return { default: mod.ReshapePanel };
+});
 
 const tabs = [
   { id: 'summary', label: 'Summary', icon: BarChart3 },
@@ -240,15 +252,21 @@ export const ResultsPanel = () => {
         )}
 
         {activeResultTab === 'charts' && (
-          <ChartsView />
+          <Suspense fallback={<div className="text-[13px] text-muted-foreground">Loading charts…</div>}>
+            <LazyChartsView />
+          </Suspense>
         )}
 
         {activeResultTab === 'merge' && (
-          <MergePanel />
+          <Suspense fallback={<div className="text-[13px] text-muted-foreground">Loading merge tools…</div>}>
+            <LazyMergePanel />
+          </Suspense>
         )}
 
         {activeResultTab === 'reshape' && (
-          <ReshapePanel />
+          <Suspense fallback={<div className="text-[13px] text-muted-foreground">Loading reshape tools…</div>}>
+            <LazyReshapePanel />
+          </Suspense>
         )}
       </div>
     </div>
